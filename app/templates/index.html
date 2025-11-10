@@ -3,9 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>check</title>
 </head>
 <body>
-    Hello world!
+    <div class="projects">
+        {% for project in projects %}
+            <div class="project">
+                <h2>{{ project.name }}</h2>
+                <div class="tasks">
+                    {% for task in project.tasks %}
+                        <div class="task">
+                            <h3>{{ task.title }}</h3>
+                            <p>Status: {{ task.status.value }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 </body>
 </html>

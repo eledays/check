@@ -20,7 +20,7 @@ class User(db.Model):
     telegram_id: Column[int] = Column(BigInteger, unique=True, nullable=False)
 
     # Relationships
-    projects = relationship("Project", backref="user", lazy=True)
+    projects = relationship("Project", back_populates="creator", lazy=True)
 
 
 class Project(db.Model):
@@ -35,8 +35,9 @@ class Project(db.Model):
     creator_id: Column[int] = Column(Integer, ForeignKey("user.id"), nullable=False)
 
     # Relationships
-    creator = relationship("User", backref=backref("projects", lazy=True))
-    tasks = relationship("Task", backref="project", lazy=True)
+    creator = relationship("User", back_populates="projects")
+    tasks = relationship("Task", back_populates="project", lazy=True)
+    notes = relationship("Note", back_populates="project", lazy=True)
 
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated_at = Column(
@@ -56,7 +57,7 @@ class Task(db.Model):
     project_id: Column[int] = Column(Integer, ForeignKey("project.id"), nullable=False)
 
     # Relationships
-    project = relationship("Project", backref=backref("tasks", lazy=True))
+    project = relationship("Project", back_populates="tasks")
 
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated_at = Column(
@@ -75,4 +76,4 @@ class Note(db.Model):
     project_id: Column[int] = Column(Integer, ForeignKey("project.id"), nullable=False)
 
     # Relationships
-    project = relationship("Project", backref=backref("notes", lazy=True))
+    project = relationship("Project", back_populates="notes")
