@@ -8,6 +8,13 @@
     --project-card-width: 512px;
 }
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
 @font-face {
     font-family: 'Inter';
     src: url('../fonts/Inter/Inter-VariableFont_opsz\,wght.ttf') format('truetype');
@@ -39,4 +46,12 @@
     text-rendering: optimizeLegibility;
     font-feature-settings: 'liga';
     user-select: none;
+}
+
+h1 {
+    margin-bottom: 32px;
+}
+
+h2 {
+    margin-bottom: 24px;
 }

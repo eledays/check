@@ -1,0 +1,53 @@
+body {
+    background-color: var(--background-color);
+    color: var(--primary-color);
+}
+
+.content {
+    padding: 32px;
+}
+
+.id-block {
+    opacity: .5;
+}
+
+.info-table {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 48px;
+}
+
+.info-cell {
+    border: var(--primary-color) 1px solid;
+    padding: 28px;
+}
+
+.info-cell h2 {
+    margin-bottom: 12px;
+}
+
+.tasks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    width: 100%;
+}
+
+.task {
+    height: max-content;
+    font-weight: lighter;
+    display: flex;
+    margin-bottom: 2px;
+    cursor: pointer;
+    width: max-content;
+    border: var(--primary-color) 1px solid;
+    padding: 12px 16px;
+    min-width: min-content;
+}
+
+.task.status-todo, .task.status-in_progress {
+    opacity: .6;
+    background-color: #ffffff2c;
+    border: none;
+}
