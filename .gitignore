@@ -1,0 +1,17 @@
+# Python virtual environments
+.venv/
+venv/
+
+# Byte-compiled / optimized / DLL files
+*.py[cod]
+__pycache__/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# DB SQLite files
+*.sqlite3
+*.db
+instance/
