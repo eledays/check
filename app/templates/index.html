@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>check</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/index.css') }}">
 </head>
 <body>
     <div class="projects">
@@ -12,9 +15,11 @@
                 <h2>{{ project.name }}</h2>
                 <div class="tasks">
                     {% for task in project.tasks %}
-                        <div class="task">
+                        <div class="task status-{{ task.status.value }}" id="task-{{ task.id }}">
+                            <span class="material-symbols-sharp notranslate no-select">
+                                square
+                            </span>
                             <h3>{{ task.title }}</h3>
-                            <p>Status: {{ task.status.value }}</p>
                         </div>
                     {% endfor %}
                 </div>
