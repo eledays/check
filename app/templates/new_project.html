@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>check</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/project_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/index.css') }}">
+</head>
+<body>
+    <div class="new-project-card">
+        <form method="post" action="{{ url_for('main.new_project') }}" class="new-project-form">
+            {{ form.hidden_tag() }}
+
+            <div id="name">
+                {{ form.name(placeholder="Название проекта") }}
+            </div>
+
+            <div id="short_name">
+                #{{ form.short_name(placeholder="Краткое название") }}
+            </div>
+
+            <div id="description">
+                <p>Описание</p>
+                {{ form.description(cols=60, rows=4, placeholder="Суть проекта, мотивация и смысл") }}
+            </div>
+
+            <div id="goals">
+                <p>Цели</p>
+                {{ form.goals(cols=60, rows=4, placeholder="Цели, желаемые результаты") }}
+            </div>
+
+            <div id="submit">
+                {{ form.submit() }}
+            </div>
+        </form>
+    </div>
+</body>
+</html>

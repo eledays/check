@@ -1,5 +1,5 @@
 body {
-    background-color: var(--background-color);
+    background-color: var(--page-background-color);
     color: var(--primary-color);
 }
 
@@ -50,4 +50,64 @@ body {
     opacity: .6;
     background-color: #ffffff2c;
     border: none;
+}
+
+.new-project-card {
+    margin: 20px auto;
+    width: max-content;
+}
+
+.new-project-card {
+    background-color: var(--background-color);
+    padding: 64px;
+}
+
+.new-project-form input {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    outline: none;
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.new-project-form #name {
+    font-size: var(--title-font-size);
+    font-weight: var(--title-font-weight);
+    margin-bottom: 8px;
+}
+
+.new-project-form #short_name {
+    font-size: var(--id-font-size);
+    font-weight: var(--id-font-weight);
+    color: var(--secondary-color);
+    margin-bottom: 12px;
+}
+
+.new-project-form #description, .new-project-form #goals {
+    margin-bottom: 12px;
+}
+
+.new-project-form #description textarea, .new-project-form #goals textarea {
+    background-color: transparent;
+    font-size: var(--id-font-size);
+    font-weight: var(--id-font-weight);
+    color: var(--primary-color);
+    border: var(--secondary-color) 1px solid;
+    outline: none;
+    margin-top: 5px;
+    resize: vertical;
+    padding: 12px;
+}
+
+.new-project-form #submit {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: var(--background-color);
+    padding: 8px;
+}
+
+.new-project-card .hint {
+    color: var(--secondary-color);
+    font-size: .8rem;
 }

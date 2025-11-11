@@ -1,11 +1,17 @@
 :root {
     --primary-color: #ffffff;
+    --secondary-color: #bebebe;
     --background-color: #000000;
     --page-background-color: #ffffff;
 
     --project-card-margin: 16px;
     --project-card-padding: 32px;
     --project-card-width: 512px;
+
+    --title-font-size: 2rem;
+    --title-font-weight: 600;
+    --id-font-size: .9rem;
+    --id-font-weight: 400;
 }
 
 * {
