@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>check — {{ project.name }}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/project_page.css') }}">
+</head>
+<body>
+    <div class="content">
+        <h1>{{ project.name }} <span class="id-block">#{{ project.id }}</span></h1>
+
+        <div class="info-table">
+            <div class="info-cell">
+                <h2>Описание</h2>
+                <p>{{ project.description }}</p>
+            </div>
+            <div class="info-cell">
+                <h2>Цели и причины</h2>
+                <p>{{ project.goals }}</p>
+            </div>
+        </div>
+
+        <h2>Задачи</h2>
+        <div class="tasks">
+            {% for task in project.tasks %}
+                <div class="task status-{{ task.status.value }}" id="task-{{ task.id }}">
+                    <p]>{{ task.title }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
