@@ -2,7 +2,6 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     const newTaskInput = document.getElementById('newTaskInput');
-    const addTaskButton = document.getElementById('addTaskButton');
     const tasksContainer = document.querySelector('.tasks');
 
     // Get project ID from URL
@@ -36,10 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Disable button while sending request
-        addTaskButton.disabled = true;
-        addTaskButton.textContent = 'Добавление...';
-
         try {
             const response = await fetch(`/api/project/${projectId}/task`, {
                 method: 'POST',
@@ -70,15 +65,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error adding task:', error);
             alert(error.message || 'Не удалось добавить задачу');
-        } finally {
-            // Re-enable button
-            addTaskButton.disabled = false;
-            addTaskButton.textContent = 'Добавить';
-        }
+        } 
     }
-
-    // Add click event listener to button
-    addTaskButton.addEventListener('click', addTask);
 
     // Add Enter key support
     newTaskInput.addEventListener('keypress', function(event) {

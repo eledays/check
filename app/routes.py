@@ -128,21 +128,25 @@ def create_task(project_id: int):
     if project.creator_id != user.id:
         return jsonify({"error": "Access denied"}), 403
 
-    # Get JSON data
-    data = request.get_json()
-    if not data or "title" not in data:
-        return jsonify({"error": "Title is required"}), 400
-
-    title = data.get("title", "").strip()
+    # Use TaskForm for validation and CSRF protection
+    form = TaskForm(data=request.get_json(), meta={'csrf': False})
     
-    # Validate title length
+    if not form.validate():
+        # Return first validation error
+        errors = form.errors
+        first_error = "Validation error"
+        if errors:
+            for field_errors in errors.values():
+                if field_errors and isinstance(field_errors, list):
+                    first_error = str(field_errors[0])
+                    break
+        return jsonify({"error": first_error}), 400
+
+    # Create new task with validated data
+    title = form.title.data
     if not title:
-        return jsonify({"error": "Title cannot be empty"}), 400
-    
-    if len(title) > 128:
-        return jsonify({"error": "Title is too long (max 128 characters)"}), 400
-
-    # Create new task
+        return jsonify({"error": "Title is required"}), 400
+        
     task = Task()
     task.title = title
     task.status = TaskStatus.TODO

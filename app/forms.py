@@ -13,4 +13,3 @@ class ProjectForm(FlaskForm):
 
 class TaskForm(FlaskForm):
     title = StringField("Название задачи", validators=[DataRequired(), Length(max=128)])
-    submit = SubmitField("Добавить")

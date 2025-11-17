@@ -112,21 +112,17 @@ body {
     font-size: .8rem;
 }
 
-/* New task form styles */
 .new-task-form {
     display: flex;
     gap: 12px;
     margin-top: 24px;
-    padding: 16px;
-    background-color: var(--page-background-color);
-    border-radius: 8px;
     align-items: center;
 }
 
 .new-task-form input {
     flex: 1;
     background-color: var(--background-color);
-    border: 1px solid var(--secondary-color);
+    border: 1px solid var(--tertiary-color);
     border-radius: 4px;
     padding: 12px 16px;
     outline: none;
@@ -136,7 +132,7 @@ body {
 }
 
 .new-task-form input:focus {
-    border-color: var(--primary-color);
+    border-color: var(--secondary-color);
 }
 
 .new-task-form input::placeholder {
