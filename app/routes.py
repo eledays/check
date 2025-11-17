@@ -12,8 +12,8 @@ from flask import (
 )
 
 from app.crud import get_user_projects, create_project
-from app.models import Project, User
-from app.forms import ProjectForm
+from app.models import Project, User, Task, TaskStatus
+from app.forms import ProjectForm, TaskForm
 from app.auth import verify_telegram_web_app_data, get_or_create_user
 from app import db
 from functools import wraps
@@ -111,3 +111,53 @@ def new_project():
         return redirect(url_for("main.index"))
 
     return render_template("new_project.html", form=form)
+
+
+@bp.route("/api/project/<int:project_id>/task", methods=["POST"])
+def create_task(project_id: int):
+    """Create a new task for a project via API."""
+    user: User | None = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    project: Project | None = Project.query.get(project_id)
+    if project is None:
+        return jsonify({"error": "Project not found"}), 404
+
+    # Check if user owns this project
+    if project.creator_id != user.id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Get JSON data
+    data = request.get_json()
+    if not data or "title" not in data:
+        return jsonify({"error": "Title is required"}), 400
+
+    title = data.get("title", "").strip()
+    
+    # Validate title length
+    if not title:
+        return jsonify({"error": "Title cannot be empty"}), 400
+    
+    if len(title) > 128:
+        return jsonify({"error": "Title is too long (max 128 characters)"}), 400
+
+    # Create new task
+    task = Task()
+    task.title = title
+    task.status = TaskStatus.TODO
+    task.project_id = project_id
+    
+    db.session.add(task)
+    db.session.commit()
+
+    # Return the sanitized task data
+    return jsonify({
+        "success": True,
+        "task": {
+            "id": task.id,
+            "title": task.title,
+            "status": task.status.value
+        }
+    }), 201
+

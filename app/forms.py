@@ -9,3 +9,8 @@ class ProjectForm(FlaskForm):
     description = TextAreaField("Описание", validators=[Optional(), Length(max=256)])
     goals = TextAreaField("Цели", validators=[Optional(), Length(max=4096)])
     submit = SubmitField("Создать")
+
+
+class TaskForm(FlaskForm):
+    title = StringField("Название задачи", validators=[DataRequired(), Length(max=128)])
+    submit = SubmitField("Добавить")
