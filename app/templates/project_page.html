@@ -20,7 +20,7 @@
         <h2>Задачи</h2>
         <div class="tasks">
             {% for task in project.tasks %}
-                <div class="task status-{{ task.status.value }}" id="task-{{ task.id }}">
+                <div class="task status-{{ task.status.value }}" id="task-{{ task.id }}" data-task-id="{{ task.id }}">
                     <p>{{ task.title }}</p>
                 </div>
             {% endfor %}
@@ -28,6 +28,20 @@
 
         <div class="new-task-form">
             <input type="text" id="newTaskInput" placeholder="Новая задача" maxlength="128">
+        </div>
+    </div>
+
+    <!-- Modal for editing/deleting task -->
+    <div id="taskModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h3>Редактировать задачу</h3>
+            <input type="text" id="editTaskInput" placeholder="Название задачи" maxlength="128">
+            <div class="modal-actions">
+                <button id="saveTaskBtn" class="btn-primary">Сохранить</button>
+                <button id="deleteTaskBtn" class="btn-danger">Удалить</button>
+                <button id="cancelTaskBtn" class="btn-secondary">Отмена</button>
+            </div>
         </div>
     </div>
     

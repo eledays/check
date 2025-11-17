@@ -1,5 +1,5 @@
 from app import db
-from app.models import Project
+from app.models import Project, Task
 
 from flask_sqlalchemy.query import Query
 
@@ -45,3 +45,36 @@ def create_project(
     db.session.add(project)
     db.session.commit()
     return project
+
+
+def update_task(task_id: int, title: str) -> Task | None:
+    """
+    Обновляет название задачи
+
+    :param task_id: ID задачи
+    :param title: Новое название задачи
+    :return: Обновленная задача или None, если задача не найдена
+    """
+    task: Task | None = Task.query.get(task_id)
+    if task is None:
+        return None
+    
+    task.title = title
+    db.session.commit()
+    return task
+
+
+def delete_task(task_id: int) -> bool:
+    """
+    Удаляет задачу из базы данных
+
+    :param task_id: ID задачи
+    :return: True, если задача была удалена, False, если задача не найдена
+    """
+    task: Task | None = Task.query.get(task_id)
+    if task is None:
+        return False
+    
+    db.session.delete(task)
+    db.session.commit()
+    return True

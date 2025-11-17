@@ -11,7 +11,7 @@ from flask import (
     current_app,
 )
 
-from app.crud import get_user_projects, create_project
+from app.crud import get_user_projects, create_project, update_task, delete_task
 from app.models import Project, User, Task, TaskStatus
 from app.forms import ProjectForm, TaskForm
 from app.auth import verify_telegram_web_app_data, get_or_create_user
@@ -165,3 +165,88 @@ def create_task(project_id: int):
         }
     }), 201
 
+
+@bp.route("/api/project/<int:project_id>/task/<int:task_id>", methods=["PUT"])
+def update_task_endpoint(project_id: int, task_id: int):
+    """Update a task title via API."""
+    user: User | None = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    project: Project | None = Project.query.get(project_id)
+    if project is None:
+        return jsonify({"error": "Project not found"}), 404
+
+    # Check if user owns this project
+    if project.creator_id != user.id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Get the task and verify it belongs to this project
+    task: Task | None = Task.query.get(task_id)
+    if task is None:
+        return jsonify({"error": "Task not found"}), 404
+    
+    if task.project_id != project_id:
+        return jsonify({"error": "Task does not belong to this project"}), 403
+
+    # Use TaskForm for validation
+    form = TaskForm(data=request.get_json(), meta={'csrf': False})
+    
+    if not form.validate():
+        errors = form.errors
+        first_error = "Validation error"
+        if errors:
+            for field_errors in errors.values():
+                if field_errors and isinstance(field_errors, list):
+                    first_error = str(field_errors[0])
+                    break
+        return jsonify({"error": first_error}), 400
+
+    title = form.title.data
+    if not title:
+        return jsonify({"error": "Title is required"}), 400
+
+    # Update task
+    updated_task = update_task(task_id, title)
+    if updated_task is None:
+        return jsonify({"error": "Failed to update task"}), 500
+
+    return jsonify({
+        "success": True,
+        "task": {
+            "id": updated_task.id,
+            "title": updated_task.title,
+            "status": updated_task.status.value
+        }
+    })
+
+
+@bp.route("/api/project/<int:project_id>/task/<int:task_id>", methods=["DELETE"])
+def delete_task_endpoint(project_id: int, task_id: int):
+    """Delete a task via API."""
+    user: User | None = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    project: Project | None = Project.query.get(project_id)
+    if project is None:
+        return jsonify({"error": "Project not found"}), 404
+
+    # Check if user owns this project
+    if project.creator_id != user.id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Get the task and verify it belongs to this project
+    task: Task | None = Task.query.get(task_id)
+    if task is None:
+        return jsonify({"error": "Task not found"}), 404
+    
+    if task.project_id != project_id:
+        return jsonify({"error": "Task does not belong to this project"}), 403
+
+    # Delete task
+    success = delete_task(task_id)
+    if not success:
+        return jsonify({"error": "Failed to delete task"}), 500
+
+    return jsonify({"success": True})
