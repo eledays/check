@@ -4,9 +4,9 @@
     --background-color: #000000;
     --page-background-color: #ffffff;
 
-    --project-card-margin: 16px;
-    --project-card-padding: 32px;
-    --project-card-width: 512px;
+    --project-card-margin: 12px;
+    --project-card-padding: 18px;
+    --project-card-width: 256px;
 
     --title-font-size: 2rem;
     --title-font-weight: 600;

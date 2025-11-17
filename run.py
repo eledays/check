@@ -9,6 +9,6 @@ migrate = Migrate(app, db)
 if __name__ == "__main__":
     # Suppress SSL/TLS handshake errors in development
     log = logging.getLogger('werkzeug')
-    log.setLevel(logging.ERROR)
+    log.setLevel(logging.INFO)
     
     app.run(debug=True, host="0.0.0.0", port=5000)

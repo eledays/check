@@ -5,6 +5,7 @@ body {
 
 .content {
     padding: 32px;
+    background-color: var(--background-color);
 }
 
 .id-block {
@@ -53,13 +54,8 @@ body {
 }
 
 .new-project-card {
-    margin: 20px auto;
-    width: max-content;
-}
-
-.new-project-card {
     background-color: var(--background-color);
-    padding: 64px;
+    padding: 16px;
 }
 
 .new-project-form input {
@@ -75,6 +71,7 @@ body {
     font-size: var(--title-font-size);
     font-weight: var(--title-font-weight);
     margin-bottom: 8px;
+    max-width: 100%;
 }
 
 .new-project-form #short_name {
@@ -82,10 +79,12 @@ body {
     font-weight: var(--id-font-weight);
     color: var(--secondary-color);
     margin-bottom: 12px;
+    max-width: 100%;
 }
 
 .new-project-form #description, .new-project-form #goals {
     margin-bottom: 12px;
+    max-width: 100%;
 }
 
 .new-project-form #description textarea, .new-project-form #goals textarea {
@@ -98,6 +97,7 @@ body {
     margin-top: 5px;
     resize: vertical;
     padding: 12px;
+    max-width: 100%;
 }
 
 .new-project-form #submit {

@@ -8,3 +8,6 @@ class Config:
     # Secret key required by Flask-WTF for CSRF protection. In production, set via env var.
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
     PREFERRED_URL_SCHEME = "https"
+    
+    # Telegram Bot Token for Mini App authentication
+    TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
