@@ -7,6 +7,7 @@ body {
     padding: 16px;
     background-color: var(--background-color);
     min-height: 100vh;
+    padding-bottom: 64px; /* Space for fixed new task form */
 }
 
 .info {
@@ -51,12 +52,21 @@ body {
     user-select: none;
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
+    
+    /* Smooth transitions for opacity and max-height */
+    transition: opacity 0.3s ease, max-height 0.3s ease, margin-bottom 0.3s ease, padding 0.3s ease, transform 0.3s ease;
+    overflow: hidden;
+    max-height: 100px; /* Reasonable max height for task */
 }
 
 .task.status-todo, .task.status-in_progress {
     opacity: .6;
     background-color: #ffffff2c;
     border: none;
+}
+
+.task.task-appearing {
+    opacity: 0;
 }
 
 .new-project-card {
@@ -123,11 +133,16 @@ body {
     gap: 12px;
     margin-top: 24px;
     align-items: center;
+    position: fixed;
+    bottom: 10px;
+    left: 16px;
+    width: calc(100% - 32px);
 }
 
 .new-task-form input {
     flex: 1;
-    background-color: var(--background-color);
+    background-color: rgba(var(--background-color-rgb), 0.8);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--tertiary-color);
     border-radius: 4px;
     padding: 12px 16px;
@@ -168,27 +183,13 @@ body {
     cursor: not-allowed;
 }
 
-/* Animation for new tasks */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-        transform: translateX(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
+/* Class for deleting task - smooth collapse */
+.task.deleting {
+    opacity: 0;
+    max-height: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 /* Modal styles */

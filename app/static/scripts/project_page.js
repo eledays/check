@@ -156,18 +156,34 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success && data.task) {
                 // Add new task to the list
                 const taskElement = createTaskElement(data.task);
+                
+                // Add appearing class before appending to DOM
+                taskElement.classList.add('task-appearing');
                 tasksContainer.appendChild(taskElement);
+                
+                // Trigger animation by removing class after a brief moment
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        taskElement.classList.remove('task-appearing');
+                        
+                        // Scroll to new task after animation starts
+                        setTimeout(() => {
+                            taskElement.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'nearest',
+                                inline: 'nearest'
+                            });
+                        }, 50); // Small delay to let animation begin
+                    });
+                });
                 
                 // Clear input
                 newTaskInput.value = '';
-                
-                // Show success feedback
-                taskElement.style.animation = 'fadeIn 0.3s ease-in';
             }
         } catch (error) {
             console.error('Error adding task:', error);
             alert(error.message || 'Не удалось добавить задачу');
-        } 
+        }
     }
 
     // Function to update task
@@ -242,11 +258,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Close modal first
                 closeModal();
                 
-                // Remove task from DOM with animation
-                taskElementToRemove.style.animation = 'fadeOut 0.3s ease-out';
+                // Add deleting class for smooth collapse animation
+                taskElementToRemove.classList.add('deleting');
+                
+                // Remove from DOM after animation completes
                 setTimeout(() => {
                     taskElementToRemove.remove();
-                }, 300);
+                }, 300); // Match transition duration in CSS
             }
         } catch (error) {
             console.error('Error deleting task:', error);
