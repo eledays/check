@@ -28,13 +28,6 @@
     font-style: normal;
 }
 
-@font-face {
-    font-family: 'Material Symbols Sharp';
-    font-style: normal;
-    font-weight: 400;
-    src: url('../fonts/Material_Symbols_Sharp/MaterialSymbolsSharp-VariableFont_FILL,GRAD,opsz,wght.ttf') format('truetype');
-}
-
 .material-symbols-sharp {
     font-family: 'Material Symbols Sharp';
     font-weight: normal;
