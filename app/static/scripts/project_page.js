@@ -2,7 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     const newTaskInput = document.getElementById('newTaskInput');
-    const tasksContainer = document.querySelector('.tasks');
+    const tasksContainer = document.querySelector('.tasks-timeline');
     const modal = document.getElementById('taskModal');
     const modalOverlay = modal.querySelector('.modal-overlay');
     const editTaskInput = document.getElementById('editTaskInput');
@@ -22,18 +22,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const LONG_PRESS_DURATION = 500; // milliseconds
     let isLongPress = false; // Track if it's a long press to prevent click
 
-    // Function to create task element
+    // Function to create task element with timeline
     function createTaskElement(task) {
+        // Create task row container
+        const taskRow = document.createElement('div');
+        taskRow.className = 'task-row';
+        
+        // Create task div
         const taskDiv = document.createElement('div');
         taskDiv.className = `task status-${task.status}`;
         taskDiv.id = `task-${task.id}`;
         taskDiv.dataset.taskId = task.id;
+        taskDiv.dataset.completedAt = task.completed_at || '';
         
         const taskTitle = document.createElement('p');
         // Escape HTML to prevent XSS
         taskTitle.textContent = task.title;
-        
         taskDiv.appendChild(taskTitle);
+        
+        // Create timeline
+        const timeline = document.createElement('div');
+        timeline.className = 'timeline';
+        
+        const timelineLine = document.createElement('div');
+        timelineLine.className = 'timeline-line';
+        
+        const timelineDot = document.createElement('div');
+        timelineDot.className = `timeline-dot ${task.status === 'done' ? 'completed' : ''}`;
+        
+        timeline.appendChild(timelineLine);
+        timeline.appendChild(timelineDot);
+        
+        // Add time if task is completed
+        if (task.status === 'done' && task.completed_at) {
+            const timelineTime = document.createElement('div');
+            timelineTime.className = 'timeline-time';
+            const date = new Date(task.completed_at);
+            timelineTime.textContent = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            timeline.appendChild(timelineTime);
+        }
+        
+        // Assemble task row
+        taskRow.appendChild(taskDiv);
+        taskRow.appendChild(timeline);
         
         // Add long press event listeners
         setupLongPress(taskDiv);
@@ -41,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add click event listener for status toggle
         setupClickHandler(taskDiv);
         
-        return taskDiv;
+        return taskRow;
     }
 
     // Setup long press on task element
@@ -145,6 +176,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle task status
     async function toggleTaskStatus(taskElement) {
         const taskId = taskElement.dataset.taskId;
+        const taskRow = taskElement.closest('.task-row');
+        const timeline = taskRow.querySelector('.timeline');
+        const timelineDot = timeline.querySelector('.timeline-dot');
         
         // Get current status
         const oldStatus = taskElement.className.match(/status-(\w+)/)[1];
@@ -155,6 +189,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // Immediately update UI (optimistic update)
         taskElement.classList.remove(`status-${oldStatus}`);
         taskElement.classList.add(`status-${newStatus}`);
+        
+        // Update timeline dot
+        if (newStatus === 'done') {
+            timelineDot.classList.add('completed');
+            // Add time placeholder
+            const now = new Date();
+            const timelineTime = document.createElement('div');
+            timelineTime.className = 'timeline-time';
+            timelineTime.textContent = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            timeline.appendChild(timelineTime);
+        } else {
+            timelineDot.classList.remove('completed');
+            // Remove time if exists
+            const timelineTime = timeline.querySelector('.timeline-time');
+            if (timelineTime) {
+                timelineTime.remove();
+            }
+        }
         
         try {
             const response = await fetch(`/api/project/${projectId}/task/${taskId}/status`, {
@@ -173,10 +225,22 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Verify server response matches our optimistic update
             if (data.success && data.task) {
+                // Update completed_at data attribute
+                taskElement.dataset.completedAt = data.task.completed_at || '';
+                
                 // If server returned different status, update to match
                 if (data.task.status !== newStatus) {
                     taskElement.classList.remove(`status-${newStatus}`);
                     taskElement.classList.add(`status-${data.task.status}`);
+                }
+                
+                // Update time with actual server time if completed
+                if (data.task.status === 'done' && data.task.completed_at) {
+                    const serverDate = new Date(data.task.completed_at);
+                    const timelineTime = timeline.querySelector('.timeline-time');
+                    if (timelineTime) {
+                        timelineTime.textContent = serverDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                    }
                 }
             }
         } catch (error) {
@@ -185,6 +249,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Rollback to old status on error
             taskElement.classList.remove(`status-${newStatus}`);
             taskElement.classList.add(`status-${oldStatus}`);
+            
+            // Rollback timeline
+            if (oldStatus === 'done') {
+                timelineDot.classList.add('completed');
+            } else {
+                timelineDot.classList.remove('completed');
+                const timelineTime = timeline.querySelector('.timeline-time');
+                if (timelineTime) {
+                    timelineTime.remove();
+                }
+            }
             
             alert(error.message || 'Не удалось изменить статус задачи');
         }
@@ -340,18 +415,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success) {
-                // Save reference before closing modal
-                const taskElementToRemove = currentTaskElement;
+                // Save reference to the task row (parent of task element)
+                const taskRow = currentTaskElement.closest('.task-row');
                 
                 // Close modal first
                 closeModal();
                 
                 // Add deleting class for smooth collapse animation
-                taskElementToRemove.classList.add('deleting');
+                currentTaskElement.classList.add('deleting');
                 
-                // Remove from DOM after animation completes
+                // Remove task row from DOM after animation completes
                 setTimeout(() => {
-                    taskElementToRemove.remove();
+                    taskRow.remove();
                 }, 300); // Match transition duration in CSS
             }
         } catch (error) {

@@ -21,10 +21,19 @@
         </div>
 
         <h2>Задачи</h2>
-        <div class="tasks">
-            {% for task in project.tasks %}
-                <div class="task status-{{ task.status.value }}" id="task-{{ task.id }}" data-task-id="{{ task.id }}">
-                    <p>{{ task.title }}</p>
+        <div class="tasks-timeline">
+            {% for task in sorted_tasks %}
+                <div class="task-row">
+                    <div class="task status-{{ task.status.value }}" id="task-{{ task.id }}" data-task-id="{{ task.id }}" data-completed-at="{{ task.completed_at.isoformat() if task.completed_at else '' }}">
+                        <p>{{ task.title }}</p>
+                    </div>
+                    <div class="timeline">
+                        <div class="timeline-line"></div>
+                        <div class="timeline-dot {% if task.status.value == 'done' %}completed{% endif %}"></div>
+                        {% if task.status.value == 'done' and task.completed_at %}
+                            <div class="timeline-time">{{ task.completed_at.strftime('%H:%M') }}</div>
+                        {% endif %}
+                    </div>
                 </div>
             {% endfor %}
         </div>

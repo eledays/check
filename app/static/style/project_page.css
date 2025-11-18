@@ -29,6 +29,20 @@ body {
     opacity: .5;
 }
 
+.tasks-timeline {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
+}
+
+.task-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+}
+
 .tasks {
     display: block;
     width: 100%;
@@ -45,6 +59,7 @@ body {
     padding: 12px 14px;
     min-width: min-content;
     box-sizing: content-box;
+    flex: 1;
     
     /* Prevent text selection and touch callout on mobile */
     -webkit-user-select: none;
@@ -431,5 +446,50 @@ body {
 
 .cancel-button:hover {
     background-color: var(--tertiary-color);
+}
+
+/* Timeline styles */
+.timeline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    min-width: 80px;
+    padding: 12px 0;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--tertiary-color);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.timeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+    background-color: var(--background-color);
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.timeline-dot.completed {
+    background-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--background-color), 
+                0 0 0 5px var(--primary-color);
+}
+
+.timeline-time {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    font-weight: 500;
+    white-space: nowrap;
 }
 

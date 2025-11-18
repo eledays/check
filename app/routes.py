@@ -90,7 +90,17 @@ def project_detail(project_id: int):
     if project.creator_id != user.id:
         return "Access denied", 403
 
-    return render_template("project_page.html", project=project)
+    # Sort tasks: completed tasks first (by completed_at desc), then incomplete tasks
+    completed_tasks = [t for t in project.tasks if t.status == TaskStatus.DONE]
+    incomplete_tasks = [t for t in project.tasks if t.status != TaskStatus.DONE]
+    
+    # Sort completed tasks by completion time (newest first)
+    completed_tasks.sort(key=lambda t: t.completed_at if t.completed_at else t.created_at, reverse=True)
+    
+    # Combine: completed first, then incomplete
+    sorted_tasks = completed_tasks + incomplete_tasks
+    
+    return render_template("project_page.html", project=project, sorted_tasks=sorted_tasks)
 
 
 @bp.route("/project/new", methods=["GET", "POST"])
@@ -282,8 +292,11 @@ def toggle_task_status(project_id: int, task_id: int):
     # Toggle status: TODO <-> DONE (skip IN_PROGRESS for simple toggle)
     if task.status == TaskStatus.DONE:
         task.status = TaskStatus.TODO
+        task.completed_at = None  # Clear completion time when unmarking as done
     else:
+        import datetime
         task.status = TaskStatus.DONE
+        task.completed_at = datetime.datetime.utcnow()  # Set completion time
     
     db.session.commit()
 
@@ -292,7 +305,8 @@ def toggle_task_status(project_id: int, task_id: int):
         "task": {
             "id": task.id,
             "title": task.title,
-            "status": task.status.value
+            "status": task.status.value,
+            "completed_at": task.completed_at.isoformat() if task.completed_at else None
         }
     })
 

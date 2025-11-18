@@ -67,6 +67,7 @@ class Task(db.Model):
         default=datetime.datetime.utcnow,
         onupdate=datetime.datetime.utcnow,
     )
+    completed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, nullable=True)
 
 
 class Note(db.Model):
