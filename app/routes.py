@@ -256,6 +256,47 @@ def update_task_endpoint(project_id: int, task_id: int):
     })
 
 
+@bp.route("/api/project/<int:project_id>/task/<int:task_id>/status", methods=["PATCH"])
+def toggle_task_status(project_id: int, task_id: int):
+    """Toggle task status between TODO and DONE."""
+    user: User | None = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    project: Project | None = Project.query.get(project_id)
+    if project is None:
+        return jsonify({"error": "Project not found"}), 404
+
+    # Check if user owns this project
+    if project.creator_id != user.id:
+        return jsonify({"error": "Access denied"}), 403
+
+    # Get the task and verify it belongs to this project
+    task: Task | None = Task.query.get(task_id)
+    if task is None:
+        return jsonify({"error": "Task not found"}), 404
+    
+    if task.project_id != project_id:
+        return jsonify({"error": "Task does not belong to this project"}), 403
+
+    # Toggle status: TODO <-> DONE (skip IN_PROGRESS for simple toggle)
+    if task.status == TaskStatus.DONE:
+        task.status = TaskStatus.TODO
+    else:
+        task.status = TaskStatus.DONE
+    
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "task": {
+            "id": task.id,
+            "title": task.title,
+            "status": task.status.value
+        }
+    })
+
+
 @bp.route("/api/project/<int:project_id>/task/<int:task_id>", methods=["DELETE"])
 def delete_task_endpoint(project_id: int, task_id: int):
     """Delete a task via API."""

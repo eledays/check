@@ -44,6 +44,7 @@ body {
     border: var(--primary-color) 1px solid;
     padding: 12px 14px;
     min-width: min-content;
+    box-sizing: content-box;
     
     /* Prevent text selection and touch callout on mobile */
     -webkit-user-select: none;
@@ -53,13 +54,33 @@ body {
     -webkit-touch-callout: none;
     -webkit-tap-highlight-color: transparent;
     
-    /* Smooth transitions for opacity and max-height */
-    transition: opacity 0.3s ease, max-height 0.3s ease, margin-bottom 0.3s ease, padding 0.3s ease, transform 0.3s ease;
+    /* Smooth transitions for opacity, background, and transform */
+    transition: opacity 0.3s ease, 
+                max-height 0.3s ease, 
+                margin-bottom 0.3s ease, 
+                padding 0.3s ease, 
+                transform 0.3s ease,
+                background-color 0.3s ease,
+                border 0.3s ease;
     overflow: hidden;
     max-height: 100px; /* Reasonable max height for task */
 }
 
+.task:hover {
+    transform: scale(1.02);
+}
+
+.task:active {
+    transform: scale(0.98);
+}
+
 .task.status-todo, .task.status-in_progress {
+    opacity: 1;
+    background-color: var(--tertiary-color);
+    border: var(--secondary-color) 1px solid;
+}
+
+.task.status-done {
     opacity: .6;
     background-color: #ffffff2c;
     border: none;

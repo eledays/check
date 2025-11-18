@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Long press handling
     let pressTimer = null;
     const LONG_PRESS_DURATION = 500; // milliseconds
+    let isLongPress = false; // Track if it's a long press to prevent click
 
     // Function to create task element
     function createTaskElement(task) {
@@ -37,6 +38,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add long press event listeners
         setupLongPress(taskDiv);
         
+        // Add click event listener for status toggle
+        setupClickHandler(taskDiv);
+        
         return taskDiv;
     }
 
@@ -47,15 +51,24 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mouse events
         taskElement.addEventListener('mousedown', function(e) {
             e.preventDefault();
+            isLongPress = false;
             startPress(taskElement);
         });
         
-        taskElement.addEventListener('mouseup', cancelPress);
+        taskElement.addEventListener('mouseup', function(e) {
+            const wasLongPress = isLongPress;
+            cancelPress();
+            // Don't trigger click if it was a long press
+            if (!wasLongPress) {
+                // Allow click handler to fire
+            }
+        });
         taskElement.addEventListener('mouseleave', cancelPress);
         
         // Touch events for mobile
         taskElement.addEventListener('touchstart', function(e) {
             touchMoved = false;
+            isLongPress = false;
             startPress(taskElement);
         }, { passive: true });
         
@@ -65,11 +78,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { passive: true });
         
         taskElement.addEventListener('touchend', function(e) {
-            if (!touchMoved && pressTimer) {
-                // Touch ended without moving - long press might trigger
-                // Don't cancel immediately to allow long press to complete
-            } else {
-                cancelPress();
+            const wasLongPress = isLongPress;
+            cancelPress();
+            
+            // If it was a long press, prevent the default click event
+            if (wasLongPress) {
+                e.preventDefault();
+                e.stopPropagation();
+            } else if (!touchMoved) {
+                // It was a short tap without movement - trigger status toggle directly
+                e.preventDefault(); // Prevent the click event from firing
+                toggleTaskStatus(taskElement);
             }
         });
         
@@ -83,10 +102,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Setup click handler for status toggle (for mouse/desktop only)
+    function setupClickHandler(taskElement) {
+        taskElement.addEventListener('click', function(e) {
+            // Don't toggle status if it was a long press
+            if (isLongPress) {
+                isLongPress = false; // Reset the flag
+                return;
+            }
+            
+            // Check if this is a touch-generated click (we handle it in touchend)
+            if (e.detail === 0) {
+                // This might be a synthetic click from touch, ignore it
+                return;
+            }
+            
+            toggleTaskStatus(taskElement);
+        });
+    }
+
     // Start press timer
     function startPress(taskElement) {
         taskElement.classList.add('pressing');
         pressTimer = setTimeout(function() {
+            isLongPress = true;
             openEditModal(taskElement);
             taskElement.classList.remove('pressing');
         }, LONG_PRESS_DURATION);
@@ -101,6 +140,54 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.task.pressing').forEach(el => {
             el.classList.remove('pressing');
         });
+    }
+
+    // Toggle task status
+    async function toggleTaskStatus(taskElement) {
+        const taskId = taskElement.dataset.taskId;
+        
+        // Get current status
+        const oldStatus = taskElement.className.match(/status-(\w+)/)[1];
+        
+        // Determine new status (toggle between todo and done)
+        const newStatus = oldStatus === 'done' ? 'todo' : 'done';
+        
+        // Immediately update UI (optimistic update)
+        taskElement.classList.remove(`status-${oldStatus}`);
+        taskElement.classList.add(`status-${newStatus}`);
+        
+        try {
+            const response = await fetch(`/api/project/${projectId}/task/${taskId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Ошибка при изменении статуса задачи');
+            }
+
+            const data = await response.json();
+            
+            // Verify server response matches our optimistic update
+            if (data.success && data.task) {
+                // If server returned different status, update to match
+                if (data.task.status !== newStatus) {
+                    taskElement.classList.remove(`status-${newStatus}`);
+                    taskElement.classList.add(`status-${data.task.status}`);
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling task status:', error);
+            
+            // Rollback to old status on error
+            taskElement.classList.remove(`status-${newStatus}`);
+            taskElement.classList.add(`status-${oldStatus}`);
+            
+            alert(error.message || 'Не удалось изменить статус задачи');
+        }
     }
 
     // Open edit modal
@@ -121,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentTaskId = null;
         currentTaskElement = null;
         editTaskInput.value = '';
+        isLongPress = false; // Reset long press flag when closing modal
     }
 
     // Function to add task
@@ -298,6 +386,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close modal when clicking overlay
     modalOverlay.addEventListener('click', closeModal);
 
-    // Setup long press for existing tasks
-    document.querySelectorAll('.task').forEach(setupLongPress);
+    // Setup long press and click handlers for existing tasks
+    document.querySelectorAll('.task').forEach(function(taskElement) {
+        setupLongPress(taskElement);
+        setupClickHandler(taskElement);
+    });
 });
