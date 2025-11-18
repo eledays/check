@@ -78,3 +78,37 @@ def delete_task(task_id: int) -> bool:
     db.session.delete(task)
     db.session.commit()
     return True
+
+
+def update_project(
+    project_id: int,
+    name: str | None = None,
+    short_name: str | None = None,
+    description: str | None = None,
+    goals: str | None = None,
+) -> Project | None:
+    """
+    Обновляет данные проекта
+
+    :param project_id: ID проекта
+    :param name: Новое название проекта
+    :param short_name: Новое короткое имя проекта
+    :param description: Новое описание проекта
+    :param goals: Новые цели проекта
+    :return: Обновленный проект или None, если проект не найден
+    """
+    project: Project | None = Project.query.get(project_id)
+    if project is None:
+        return None
+    
+    if name is not None:
+        project.name = name
+    if short_name is not None:
+        project.short_name = short_name
+    if description is not None:
+        project.description = description
+    if goals is not None:
+        project.goals = goals
+    
+    db.session.commit()
+    return project

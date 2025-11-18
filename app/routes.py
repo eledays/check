@@ -11,9 +11,9 @@ from flask import (
     current_app,
 )
 
-from app.crud import get_user_projects, create_project, update_task, delete_task
+from app.crud import get_user_projects, create_project, update_project, update_task, delete_task
 from app.models import Project, User, Task, TaskStatus
-from app.forms import ProjectForm, TaskForm
+from app.forms import ProjectForm, EditProjectForm, TaskForm
 from app.auth import verify_telegram_web_app_data, get_or_create_user
 from app import db
 from functools import wraps
@@ -111,6 +111,41 @@ def new_project():
         return redirect(url_for("main.index"))
 
     return render_template("new_project.html", form=form)
+
+
+@bp.route("/project/<int:project_id>/edit", methods=["GET", "POST"])
+def edit_project(project_id: int):
+    """Edit an existing project."""
+    user: User | None = get_current_user()
+    if not user:
+        return "Unauthorized", 401
+
+    project: Project | None = Project.query.get(project_id)
+    if project is None:
+        return "Project not found", 404
+
+    # Check if user owns this project
+    if project.creator_id != user.id:
+        return "Access denied", 403
+
+    form = EditProjectForm(obj=project)
+    
+    if form.validate_on_submit():
+        # Update project with validated and sanitized data from form
+        updated_project = update_project(
+            project_id=project_id,
+            name=form.name.data,
+            short_name=form.short_name.data,
+            description=form.description.data,
+            goals=form.goals.data,
+        )
+        
+        if updated_project:
+            return redirect(url_for("main.project_detail", project_id=project_id))
+        else:
+            flash("Ошибка при обновлении проекта", "error")
+
+    return render_template("edit_project.html", form=form, project=project)
 
 
 @bp.route("/api/project/<int:project_id>/task", methods=["POST"])

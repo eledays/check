@@ -15,6 +15,9 @@
         <div class="info">
             <h1>{{ project.name }} <span class="id-block">#{{ project.id }}</span></h1>
             <p class="description">{{ project.description }}</p>
+            <div class="project-actions">
+                <a href="{{ url_for('main.edit_project', project_id=project.id) }}" class="btn-edit">Редактировать проект</a>
+            </div>
         </div>
 
         <h2>Задачи</h2>

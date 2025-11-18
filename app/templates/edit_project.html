@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование проекта - check</title>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/project_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/index.css') }}">
+</head>
+<body>
+    <div class="new-project-card">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h1>Редактирование проекта</h1>
+        
+        <form method="post" action="{{ url_for('main.edit_project', project_id=project.id) }}" class="new-project-form">
+            {{ form.hidden_tag() }}
+
+            <div id="name">
+                {{ form.name(placeholder="Название проекта", autofocus=true) }}
+                {% if form.name.errors %}
+                    <ul class="errors">
+                    {% for error in form.name.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div id="short_name">
+                #{{ form.short_name(placeholder="Краткое название") }}
+                {% if form.short_name.errors %}
+                    <ul class="errors">
+                    {% for error in form.short_name.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div id="description">
+                <p>Описание</p>
+                {{ form.description(cols=60, rows=4, placeholder="Суть проекта, мотивация и смысл") }}
+                {% if form.description.errors %}
+                    <ul class="errors">
+                    {% for error in form.description.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div id="goals">
+                <p>Цели</p>
+                {{ form.goals(cols=60, rows=4, placeholder="Цели, желаемые результаты") }}
+                {% if form.goals.errors %}
+                    <ul class="errors">
+                    {% for error in form.goals.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <div id="submit">
+                {{ form.submit(id="submit-button") }}
+                <a href="{{ url_for('main.project_detail', project_id=project.id) }}" class="cancel-button">Отмена</a>
+            </div>
+        </form>
+    </div>
+    
+    <script src="{{ url_for('static', filename='scripts/telegram-init.js') }}"></script>
+</body>
+</html>
