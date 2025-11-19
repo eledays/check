@@ -43,7 +43,7 @@ body {
     position: absolute;
     top: 12px;
     bottom: 12px;
-    right: 40px; /* Center line with timeline dots (80px timeline / 2) */
+    left: 20px; /* Center line with timeline dots (40px timeline / 2) */
     width: 2px;
     background-color: var(--tertiary-color);
     z-index: 0;
@@ -70,7 +70,7 @@ body {
     margin-bottom: 2px;
     cursor: pointer;
     width: max-content;
-    padding: 12px 14px;
+    padding: 12px 0;
     min-width: min-content;
     box-sizing: content-box;
     flex: 1;
@@ -94,14 +94,17 @@ body {
                 border 0.3s ease;
     overflow: hidden;
     max-height: 100px; /* Reasonable max height for task */
+    
+    border: none;
 }
 
 .task.status-todo, .task.status-in_progress {
-    background-color: var(--tertiary-color);
+    /* background-color: var(--tertiary-color); */
 }
 
 .task.status-done {
-    background-color: #ffffff2c;
+    /* background-color: #ffffff2c; */
+    border: none;
 }
 
 .task.task-appearing {
@@ -458,7 +461,7 @@ body {
     align-items: center;
     justify-content: center;
     position: relative;
-    min-width: 80px;
+    min-width: 40px;
     padding: 12px 0;
     min-height: 48px; /* Fixed height for all timelines */
 }
@@ -481,13 +484,14 @@ body {
 
 .timeline-dot.completed {
     background-color: var(--primary-color);
+    /* background-color: var(--primary-color);
     box-shadow: 0 0 0 3px var(--background-color), 
-                0 0 0 5px var(--primary-color);
+                0 0 0 5px var(--primary-color); */
 }
 
 .timeline-time {
     position: absolute;
-    bottom: 4px;
+    bottom: 0;
     font-size: 0.75rem;
     color: var(--secondary-color);
     font-weight: 500;

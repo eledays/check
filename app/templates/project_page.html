@@ -28,15 +28,15 @@
         <div class="tasks-timeline">
             {% for task in sorted_tasks %}
                 <div class="task-row">
-                    <div class="task status-{{ task.status.value }}" id="task-{{ task.id }}" data-task-id="{{ task.id }}" data-completed-at="{{ task.completed_at|utc_iso }}">
-                        <p>{{ task.title }}</p>
-                    </div>
                     <div class="timeline">
                         <div class="timeline-line"></div>
                         <div class="timeline-dot {% if task.status.value == 'done' %}completed{% endif %}"></div>
                         {% if task.status.value == 'done' and task.completed_at %}
                             <div class="timeline-time" data-time="{{ task.completed_at|utc_iso }}"></div>
                         {% endif %}
+                    </div>
+                    <div class="task status-{{ task.status.value }}" id="task-{{ task.id }}" data-task-id="{{ task.id }}" data-completed-at="{{ task.completed_at|utc_iso }}">
+                        <p>{{ task.title }}</p>
                     </div>
                 </div>
             {% endfor %}

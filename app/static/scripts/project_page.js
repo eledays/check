@@ -86,9 +86,9 @@ document.addEventListener('DOMContentLoaded', function() {
             timeline.appendChild(timelineTime);
         }
         
-        // Assemble task row
-        taskRow.appendChild(taskDiv);
+        // Assemble task row - timeline first, then task
         taskRow.appendChild(timeline);
+        taskRow.appendChild(taskDiv);
         
         // Add long press event listeners
         setupLongPress(taskDiv);
