@@ -1,4 +1,5 @@
 from typing import Any
+import datetime
 from flask import (
     Blueprint,
     render_template,
@@ -303,11 +304,21 @@ def toggle_task_status(project_id: int, task_id: int):
         task.status = TaskStatus.TODO
         task.completed_at = None  # Clear completion time when unmarking as done
     else:
-        import datetime
         task.status = TaskStatus.DONE
-        task.completed_at = datetime.datetime.utcnow()  # Set completion time
+        task.completed_at = datetime.datetime.now(datetime.timezone.utc)  # Set completion time in UTC
     
     db.session.commit()
+
+    # Format completed_at with explicit UTC timezone for JavaScript
+    completed_at_iso: str | None = None
+    if task.completed_at is not None:
+        # Ensure timezone-aware datetime and format with Z suffix
+        dt = task.completed_at
+        if dt.tzinfo is None:  # type: ignore[union-attr]
+            # If stored datetime is naive, treat it as UTC
+            completed_at_iso = dt.replace(tzinfo=datetime.timezone.utc).isoformat()  # type: ignore[union-attr]
+        else:
+            completed_at_iso = dt.isoformat()  # type: ignore[union-attr]
 
     return jsonify({
         "success": True,
@@ -315,7 +326,7 @@ def toggle_task_status(project_id: int, task_id: int):
             "id": task.id,
             "title": task.title,
             "status": task.status.value,
-            "completed_at": task.completed_at.isoformat() if task.completed_at else None
+            "completed_at": completed_at_iso
         }
     })
 

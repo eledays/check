@@ -1,5 +1,29 @@
 // project_page.js - Handle task creation, editing, and deletion on project page
 
+// Helper function to format time in user's timezone
+function formatTimeInUserTimezone(isoString) {
+    if (!isoString) return '';
+    
+    const date = new Date(isoString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+        console.error('Invalid date string:', isoString);
+        return '';
+    }
+
+    // Format time in user's local timezone
+    const result = date.toLocaleTimeString('ru-RU', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
+    
+    console.log(`Formatted time for ${isoString} is ${result}`);
+
+    return result
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const newTaskInput = document.getElementById('newTaskInput');
     const tasksContainer = document.querySelector('.tasks-timeline');
@@ -57,8 +81,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (task.status === 'done' && task.completed_at) {
             const timelineTime = document.createElement('div');
             timelineTime.className = 'timeline-time';
-            const date = new Date(task.completed_at);
-            timelineTime.textContent = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            // Use the helper function to format time in user's timezone
+            timelineTime.textContent = formatTimeInUserTimezone(task.completed_at);
             timeline.appendChild(timelineTime);
         }
         
@@ -197,7 +221,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const now = new Date();
             const timelineTime = document.createElement('div');
             timelineTime.className = 'timeline-time';
-            timelineTime.textContent = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            // Format current time in user's timezone
+            timelineTime.textContent = formatTimeInUserTimezone(now.toISOString());
             timeline.appendChild(timelineTime);
         } else {
             timelineDot.classList.remove('completed');
@@ -236,10 +261,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Update time with actual server time if completed
                 if (data.task.status === 'done' && data.task.completed_at) {
-                    const serverDate = new Date(data.task.completed_at);
                     const timelineTime = timeline.querySelector('.timeline-time');
                     if (timelineTime) {
-                        timelineTime.textContent = serverDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                        // Use the helper function to format time in user's timezone
+                        timelineTime.textContent = formatTimeInUserTimezone(data.task.completed_at);
                     }
                 }
             }
@@ -465,5 +490,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.task').forEach(function(taskElement) {
         setupLongPress(taskElement);
         setupClickHandler(taskElement);
+    });
+    
+    // Convert all existing timeline times to user's timezone
+    document.querySelectorAll('.timeline-time[data-time]').forEach(function(timeElement) {
+        const isoTime = timeElement.getAttribute('data-time');
+        if (isoTime) {
+            timeElement.textContent = formatTimeInUserTimezone(isoTime);
+        }
     });
 });

@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from werkzeug.middleware.proxy_fix import ProxyFix
+import datetime
 
 from config import Config
 
@@ -31,5 +32,18 @@ def create_app(config_class: Type[Config] = Config) -> Flask:
     app.register_blueprint(main_bp)
 
     from app import models
+
+    # Register custom Jinja2 filters
+    @app.template_filter('utc_iso')
+    def utc_iso_filter(dt: datetime.datetime | None) -> str:
+        """Convert datetime to UTC ISO format with Z suffix for JavaScript."""
+        if dt is None:
+            return ''
+        
+        # If datetime is naive, treat it as UTC
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        
+        return dt.isoformat()
 
     return app
