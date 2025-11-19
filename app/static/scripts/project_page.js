@@ -197,6 +197,82 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Function to reorder tasks: completed tasks at top (sorted by completion time - oldest first, newest last), then incomplete at bottom
+    function reorderTasks() {
+        const taskRows = Array.from(tasksContainer.querySelectorAll('.task-row'));
+        
+        // FLIP Animation: First - record initial positions
+        const initialPositions = new Map();
+        taskRows.forEach(taskRow => {
+            const rect = taskRow.getBoundingClientRect();
+            initialPositions.set(taskRow, {
+                top: rect.top,
+                left: rect.left
+            });
+        });
+        
+        // Separate completed and incomplete tasks
+        const completedTasks = [];
+        const incompleteTasks = [];
+        
+        taskRows.forEach(taskRow => {
+            const task = taskRow.querySelector('.task');
+            const status = task.className.match(/status-(\w+)/)[1];
+            
+            if (status === 'done') {
+                const completedAt = task.dataset.completedAt;
+                completedTasks.push({ taskRow, completedAt });
+            } else {
+                incompleteTasks.push(taskRow);
+            }
+        });
+        
+        // Sort completed tasks by completion time (oldest first, newest last)
+        completedTasks.sort((a, b) => {
+            const timeA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+            const timeB = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+            return timeA - timeB; // Ascending order (oldest first)
+        });
+        
+        // Re-append in correct order: completed first (oldest to newest), then incomplete
+        completedTasks.forEach(({ taskRow }) => {
+            tasksContainer.appendChild(taskRow);
+        });
+        incompleteTasks.forEach(taskRow => {
+            tasksContainer.appendChild(taskRow);
+        });
+        
+        // FLIP Animation: Last - record final positions and animate
+        taskRows.forEach(taskRow => {
+            const initial = initialPositions.get(taskRow);
+            const final = taskRow.getBoundingClientRect();
+            
+            const deltaY = initial.top - final.top;
+            const deltaX = initial.left - final.left;
+            
+            // Skip animation if element didn't move
+            if (deltaY === 0 && deltaX === 0) return;
+            
+            // Invert - apply transform to make it appear at initial position
+            taskRow.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            taskRow.style.transition = 'none';
+            
+            // Force reflow
+            taskRow.offsetHeight;
+            
+            // Play - animate to final position
+            requestAnimationFrame(() => {
+                taskRow.style.transition = 'transform 0.3s ease-out';
+                taskRow.style.transform = '';
+                
+                // Clean up after animation
+                setTimeout(() => {
+                    taskRow.style.transition = '';
+                }, 300);
+            });
+        });
+    }
+
     // Toggle task status
     async function toggleTaskStatus(taskElement) {
         const taskId = taskElement.dataset.taskId;
@@ -224,6 +300,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Format current time in user's timezone
             timelineTime.textContent = formatTimeInUserTimezone(now.toISOString());
             timeline.appendChild(timelineTime);
+            // Set temporary completed_at for proper sorting
+            taskElement.dataset.completedAt = now.toISOString();
         } else {
             timelineDot.classList.remove('completed');
             // Remove time if exists
@@ -231,7 +309,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (timelineTime) {
                 timelineTime.remove();
             }
+            // Clear completed_at
+            taskElement.dataset.completedAt = '';
         }
+        
+        // Reorder tasks after status change
+        reorderTasks();
         
         try {
             const response = await fetch(`/api/project/${projectId}/task/${taskId}/status`, {
@@ -250,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Verify server response matches our optimistic update
             if (data.success && data.task) {
-                // Update completed_at data attribute
+                // Update completed_at data attribute with server value
                 taskElement.dataset.completedAt = data.task.completed_at || '';
                 
                 // If server returned different status, update to match
@@ -267,6 +350,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         timelineTime.textContent = formatTimeInUserTimezone(data.task.completed_at);
                     }
                 }
+                
+                // Reorder again with accurate server time
+                reorderTasks();
             }
         } catch (error) {
             console.error('Error toggling task status:', error);
@@ -278,13 +364,19 @@ document.addEventListener('DOMContentLoaded', function() {
             // Rollback timeline
             if (oldStatus === 'done') {
                 timelineDot.classList.add('completed');
+                // Restore previous completed_at value if it existed
+                // (We don't have the old value saved, but server should have it)
             } else {
                 timelineDot.classList.remove('completed');
                 const timelineTime = timeline.querySelector('.timeline-time');
                 if (timelineTime) {
                     timelineTime.remove();
                 }
+                taskElement.dataset.completedAt = '';
             }
+            
+            // Reorder tasks back to correct state
+            reorderTasks();
             
             alert(error.message || 'Не удалось изменить статус задачи');
         }

@@ -100,12 +100,12 @@ def project_detail(project_id: int):
     if project.creator_id != user.id:
         return "Access denied", 403
 
-    # Sort tasks: completed tasks first (by completed_at desc), then incomplete tasks
+    # Sort tasks: completed tasks first (by completed_at asc - oldest first), then incomplete tasks
     completed_tasks = [t for t in project.tasks if t.status == TaskStatus.DONE]
     incomplete_tasks = [t for t in project.tasks if t.status != TaskStatus.DONE]
     
-    # Sort completed tasks by completion time (newest first)
-    completed_tasks.sort(key=lambda t: t.completed_at if t.completed_at else t.created_at, reverse=True)
+    # Sort completed tasks by completion time (oldest first)
+    completed_tasks.sort(key=lambda t: t.completed_at if t.completed_at else t.created_at, reverse=False)
     
     # Combine: completed first, then incomplete
     sorted_tasks = completed_tasks + incomplete_tasks
