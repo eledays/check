@@ -34,6 +34,19 @@ body {
     flex-direction: column;
     width: 100%;
     gap: 0;
+    position: relative;
+}
+
+/* Continuous timeline line across all tasks */
+.tasks-timeline::before {
+    content: '';
+    position: absolute;
+    top: 12px;
+    bottom: 12px;
+    right: 40px; /* Center line with timeline dots (80px timeline / 2) */
+    width: 2px;
+    background-color: var(--tertiary-color);
+    z-index: 0;
 }
 
 .task-row {
@@ -57,11 +70,11 @@ body {
     margin-bottom: 2px;
     cursor: pointer;
     width: max-content;
-    border: var(--primary-color) 1px solid;
     padding: 12px 14px;
     min-width: min-content;
     box-sizing: content-box;
     flex: 1;
+    border: 1px solid var(--secondary-color);
     
     /* Prevent text selection and touch callout on mobile */
     -webkit-user-select: none;
@@ -83,24 +96,12 @@ body {
     max-height: 100px; /* Reasonable max height for task */
 }
 
-.task:hover {
-    transform: scale(1.02);
-}
-
-.task:active {
-    transform: scale(0.98);
-}
-
 .task.status-todo, .task.status-in_progress {
-    opacity: 1;
     background-color: var(--tertiary-color);
-    border: var(--secondary-color) 1px solid;
 }
 
 .task.status-done {
-    opacity: .6;
     background-color: #ffffff2c;
-    border: none;
 }
 
 .task.task-appearing {
@@ -369,7 +370,7 @@ body {
 
 /* Long press feedback */
 .task.pressing {
-    transform: scale(0.98);
+    /* transform: scale(0.98); */
     opacity: 0.8;
     transition: all 0.1s ease;
 }
@@ -455,19 +456,16 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     position: relative;
     min-width: 80px;
     padding: 12px 0;
+    min-height: 48px; /* Fixed height for all timelines */
 }
 
+/* Remove individual timeline lines - now handled by ::before on parent */
 .timeline-line {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background-color: var(--tertiary-color);
-    left: 50%;
-    transform: translateX(-50%);
+    display: none;
 }
 
 .timeline-dot {
@@ -488,7 +486,8 @@ body {
 }
 
 .timeline-time {
-    margin-top: 8px;
+    position: absolute;
+    bottom: 4px;
     font-size: 0.75rem;
     color: var(--secondary-color);
     font-weight: 500;
