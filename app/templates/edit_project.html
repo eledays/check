@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Редактирование проекта - check</title>
 
+    <!-- Load mock before Telegram script for local development -->
+    {% if config.TELEGRAM_MOCK %}
+    <script src="{{ url_for('static', filename='scripts/telegram-mock.js') }}"></script>
+    {% endif %}
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style/project_page.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style/index.css') }}">

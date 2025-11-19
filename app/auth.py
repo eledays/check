@@ -26,6 +26,15 @@ def verify_telegram_web_app_data(init_data: str, bot_token: str) -> dict | None:
         
         received_hash = parsed_data.pop('hash')
         
+        # Check if this is mock data (for local development)
+        if received_hash == 'mock_hash_for_local_dev':
+            # In dev mode, accept mock data
+            if 'user' in parsed_data:
+                user_data = json.loads(parsed_data['user'])
+                print(f"[DEV] Mock authentication for user: {user_data.get('id')}")
+                return user_data
+            return None
+        
         # Create data check string
         data_check_arr = [f"{k}={v}" for k, v in sorted(parsed_data.items())]
         data_check_string = '\n'.join(data_check_arr)

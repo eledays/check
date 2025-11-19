@@ -11,3 +11,6 @@ class Config:
     
     # Telegram Bot Token for Mini App authentication
     TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    
+    # Enable Telegram Mock for local development (disable with TELEGRAM_MOCK=false)
+    TELEGRAM_MOCK = os.getenv("TELEGRAM_MOCK", "false").lower() == "true"

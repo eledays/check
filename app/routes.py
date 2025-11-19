@@ -25,6 +25,15 @@ def get_current_user() -> User | None:
     """Get current user from session."""
     telegram_id: Any | None = session.get("telegram_id")
     if not telegram_id:
+        # In mock mode, auto-authenticate with mock user for development
+        if current_app.config.get("TELEGRAM_MOCK", False):
+            # Use mock telegram_id
+            mock_telegram_id = 123456789
+            mock_user = get_or_create_user(mock_telegram_id)
+            session["telegram_id"] = mock_telegram_id
+            session.permanent = True
+            print(f"[DEV] Auto-authenticated mock user: {mock_telegram_id}")
+            return mock_user
         return None
     return User.query.filter_by(telegram_id=telegram_id).first()
 
