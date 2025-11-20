@@ -27,8 +27,8 @@
         <h2>Задачи</h2>
         <div class="tasks-timeline">
             {% for task in sorted_tasks %}
-                <div class="task-row">
-                    <div class="timeline">
+                <div class="task-row" {% if task.status.value != 'done' %}draggable="true"{% endif %} data-task-id="{{ task.id }}">
+                    <div class="timeline {% if task.status.value != 'done' %}draggable-handle{% endif %}">
                         <div class="timeline-line"></div>
                         <div class="timeline-dot {% if task.status.value == 'done' %}completed{% endif %}"></div>
                         {% if task.status.value == 'done' and task.completed_at %}

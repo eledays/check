@@ -100,12 +100,15 @@ def project_detail(project_id: int):
     if project.creator_id != user.id:
         return "Access denied", 403
 
-    # Sort tasks: completed tasks first (by completed_at asc - oldest first), then incomplete tasks
+    # Sort tasks: completed tasks first (by completed_at asc - oldest first), then incomplete tasks (by order)
     completed_tasks = [t for t in project.tasks if t.status == TaskStatus.DONE]
     incomplete_tasks = [t for t in project.tasks if t.status != TaskStatus.DONE]
     
     # Sort completed tasks by completion time (oldest first)
     completed_tasks.sort(key=lambda t: t.completed_at if t.completed_at else t.created_at, reverse=False)
+    
+    # Sort incomplete tasks by order field
+    incomplete_tasks.sort(key=lambda t: t.order)
     
     # Combine: completed first, then incomplete
     sorted_tasks = completed_tasks + incomplete_tasks
@@ -201,11 +204,18 @@ def create_task(project_id: int):
     title = form.title.data
     if not title:
         return jsonify({"error": "Title is required"}), 400
+    
+    # Get the highest order value for incomplete tasks in this project
+    max_order = db.session.query(db.func.max(Task.order)).filter(
+        Task.project_id == project_id,
+        Task.status != TaskStatus.DONE
+    ).scalar() or -1
         
     task = Task()
     task.title = title
     task.status = TaskStatus.TODO
     task.project_id = project_id
+    task.order = max_order + 1  # Add at the end
     
     db.session.add(task)
     db.session.commit()
@@ -360,3 +370,38 @@ def delete_task_endpoint(project_id: int, task_id: int):
         return jsonify({"error": "Failed to delete task"}), 500
 
     return jsonify({"success": True})
+
+
+@bp.route("/api/project/<int:project_id>/tasks/reorder", methods=["POST"])
+def reorder_tasks(project_id: int):
+    """Reorder incomplete tasks for a project."""
+    user: User | None = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    project: Project | None = Project.query.get(project_id)
+    if project is None:
+        return jsonify({"error": "Project not found"}), 404
+
+    # Check if user owns this project
+    if project.creator_id != user.id:
+        return jsonify({"error": "Access denied"}), 403
+
+    data = request.get_json()
+    task_ids = data.get("task_ids", [])
+    
+    if not task_ids or not isinstance(task_ids, list):
+        return jsonify({"error": "Invalid task_ids"}), 400
+
+    try:
+        # Update order for each task
+        for index, task_id in enumerate(task_ids):
+            task: Task | None = Task.query.get(task_id)
+            if task and task.project_id == project_id:
+                task.order = index
+        
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500

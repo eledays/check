@@ -55,6 +55,7 @@ class Task(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(128), nullable=False)
     status: Mapped[TaskStatus] = mapped_column(SAEnum(TaskStatus), nullable=False, default=TaskStatus.TODO)
+    order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     project_id: Mapped[int] = mapped_column(Integer, ForeignKey("project.id"), nullable=False)
 
     # Relationships

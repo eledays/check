@@ -41,6 +41,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentTaskId = null;
     let currentTaskElement = null;
     
+    // Drag and drop state
+    let draggedElement = null;
+    let dragGhost = null; // Visual ghost element for dragging
+    let dragOffsetY = 0;
+    let dragOffsetX = 0;
+    let autoScrollInterval = null; // For auto-scrolling near edges
+    
     // Long press handling
     let pressTimer = null;
     const LONG_PRESS_DURATION = 500; // milliseconds
@@ -51,6 +58,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create task row container
         const taskRow = document.createElement('div');
         taskRow.className = 'task-row';
+        taskRow.dataset.taskId = task.id;
+        
+        // Set draggable attribute for incomplete tasks
+        if (task.status !== 'done') {
+            taskRow.setAttribute('draggable', 'true');
+        }
         
         // Create task div
         const taskDiv = document.createElement('div');
@@ -67,6 +80,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create timeline
         const timeline = document.createElement('div');
         timeline.className = 'timeline';
+        
+        // Add draggable-handle class for incomplete tasks
+        if (task.status !== 'done') {
+            timeline.classList.add('draggable-handle');
+        }
         
         const timelineLine = document.createElement('div');
         timelineLine.className = 'timeline-line';
@@ -90,6 +108,11 @@ document.addEventListener('DOMContentLoaded', function() {
         taskRow.appendChild(timeline);
         taskRow.appendChild(taskDiv);
         
+        // Setup drag and drop AFTER elements are assembled
+        if (task.status !== 'done') {
+            setupDragAndDrop(taskRow);
+        }
+        
         // Add long press event listeners
         setupLongPress(taskDiv);
         
@@ -99,13 +122,438 @@ document.addEventListener('DOMContentLoaded', function() {
         return taskRow;
     }
 
+    // Setup drag and drop on task row
+    function setupDragAndDrop(taskRow) {
+        const timeline = taskRow.querySelector('.timeline');
+        const taskElement = taskRow.querySelector('.task');
+        
+        // Make only timeline draggable, not the whole row
+        // Prevent drag from starting anywhere except timeline
+        taskRow.addEventListener('mousedown', function(e) {
+            const target = e.target;
+            const isTimeline = target === timeline || 
+                             target.classList.contains('timeline-dot') ||
+                             target.classList.contains('timeline-line') ||
+                             target.closest('.timeline.draggable-handle');
+            
+            if (!isTimeline) {
+                // Remove draggable attribute temporarily to prevent drag
+                taskRow.removeAttribute('draggable');
+                // Restore it after a moment
+                setTimeout(() => {
+                    if (taskRow.querySelector('.timeline.draggable-handle')) {
+                        taskRow.setAttribute('draggable', 'true');
+                    }
+                }, 0);
+            } else {
+                // Ensure draggable is set when starting from timeline
+                taskRow.setAttribute('draggable', 'true');
+            }
+        });
+        
+        // Prevent drag from starting on task element
+        taskElement.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
+        taskElement.addEventListener('mousedown', function(e) {
+            // Prevent default only on task element to allow clicks/long press
+            // but not on timeline where we want drag
+        });
+        
+        // Dragstart - only triggers when dragging from timeline
+        taskRow.addEventListener('dragstart', function(e) {
+            // Check if drag started from timeline area
+            const target = e.target;
+            const isTimeline = target === timeline || 
+                             target.classList.contains('timeline-dot') ||
+                             target.classList.contains('timeline-line') ||
+                             target.closest('.timeline.draggable-handle');
+            
+            if (!isTimeline) {
+                e.preventDefault();
+                return false;
+            }
+            
+            console.log('Drag started from timeline'); // Debug
+            
+            draggedElement = taskRow;
+            taskRow.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', taskRow.dataset.taskId);
+            
+            // Create a custom drag image for better visual feedback
+            const dragImage = taskRow.cloneNode(true);
+            dragImage.style.position = 'absolute';
+            dragImage.style.top = '-9999px';
+            dragImage.style.left = '-9999px';
+            dragImage.style.opacity = '0.8';
+            dragImage.style.transform = 'rotate(2deg)';
+            dragImage.style.width = taskRow.offsetWidth + 'px';
+            dragImage.classList.add('drag-preview');
+            document.body.appendChild(dragImage);
+            
+            // Set custom drag image
+            const rect = taskRow.getBoundingClientRect();
+            e.dataTransfer.setDragImage(dragImage, rect.width / 2, rect.height / 2);
+            
+            // Remove the preview element after drag starts
+            setTimeout(() => {
+                if (dragImage.parentNode) {
+                    dragImage.parentNode.removeChild(dragImage);
+                }
+            }, 0);
+        });
+        
+        // Dragover - allow drop
+        taskRow.addEventListener('dragover', function(e) {
+            if (draggedElement && draggedElement !== taskRow) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                // Get all incomplete task rows
+                const incompleteTasks = getIncompleteTaskRows();
+                
+                // Only allow dropping on incomplete tasks
+                if (incompleteTasks.includes(taskRow)) {
+                    taskRow.classList.add('drag-over');
+                }
+            }
+        });
+        
+        // Dragleave - remove highlight
+        taskRow.addEventListener('dragleave', function(e) {
+            if (e.target === taskRow) {
+                taskRow.classList.remove('drag-over');
+            }
+        });
+        
+        // Drop - reorder tasks
+        taskRow.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (draggedElement && draggedElement !== taskRow) {
+                const incompleteTasks = getIncompleteTaskRows();
+                
+                // Only allow dropping on incomplete tasks
+                if (incompleteTasks.includes(taskRow)) {
+                    // Determine if we should insert before or after
+                    const draggedIndex = incompleteTasks.indexOf(draggedElement);
+                    const targetIndex = incompleteTasks.indexOf(taskRow);
+                    
+                    // Animate the move
+                    if (draggedIndex < targetIndex) {
+                        // Dragging down - insert after target
+                        taskRow.parentNode.insertBefore(draggedElement, taskRow.nextSibling);
+                    } else {
+                        // Dragging up - insert before target
+                        taskRow.parentNode.insertBefore(draggedElement, taskRow);
+                    }
+                    
+                    // Add a brief highlight animation
+                    draggedElement.classList.add('drop-animation');
+                    setTimeout(() => {
+                        draggedElement.classList.remove('drop-animation');
+                    }, 300);
+                    
+                    // Save new order to server
+                    saveTaskOrder();
+                }
+            }
+            
+            taskRow.classList.remove('drag-over');
+        });
+        
+        // Dragend - cleanup
+        taskRow.addEventListener('dragend', function(e) {
+            taskRow.classList.remove('dragging');
+            document.querySelectorAll('.task-row.drag-over').forEach(row => {
+                row.classList.remove('drag-over');
+            });
+            draggedElement = null;
+        });
+        
+        // Touch support for mobile with smooth animation
+        let touchStartY = 0;
+        let touchStartX = 0;
+        let isDraggingTouch = false;
+        let touchDragElement = null;
+        
+        timeline.addEventListener('touchstart', function(e) {
+            const touch = e.touches[0];
+            touchStartY = touch.clientY;
+            touchStartX = touch.clientX;
+            isDraggingTouch = false;
+            
+            // Store offset for smooth positioning
+            const rect = taskRow.getBoundingClientRect();
+            dragOffsetY = touch.clientY - rect.top;
+            dragOffsetX = touch.clientX - rect.left;
+            
+            // Prevent long press from triggering while on timeline
+            e.stopPropagation();
+        }, { passive: false }); // Changed to false to allow preventDefault in touchmove
+        
+        timeline.addEventListener('touchmove', function(e) {
+            if (!isDraggingTouch) {
+                const touch = e.touches[0];
+                const deltaY = Math.abs(touch.clientY - touchStartY);
+                const deltaX = Math.abs(touch.clientX - touchStartX);
+                
+                // Start dragging if moved more than 10px
+                if (deltaY > 10 || deltaX > 10) {
+                    isDraggingTouch = true;
+                    draggedElement = taskRow;
+                    taskRow.classList.add('dragging');
+                    
+                    // Don't block body scrolling - we'll handle it with auto-scroll
+                    // Just prevent default touch behavior
+                    
+                    // Haptic feedback on mobile (if supported)
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+                    
+                    // Create ghost element for visual feedback
+                    createDragGhost(taskRow);
+                    
+                    // Prevent scrolling now that we started dragging
+                    e.preventDefault();
+                }
+                // Don't prevent default if not dragging yet - allow normal scroll
+            } else {
+                // We are dragging - prevent page scrolling
+                e.preventDefault();
+                
+                const touch = e.touches[0];
+                
+                // Update ghost position
+                if (dragGhost) {
+                    dragGhost.style.left = (touch.clientX - dragOffsetX) + 'px';
+                    dragGhost.style.top = (touch.clientY - dragOffsetY) + 'px';
+                }
+                
+                // Handle auto-scroll near edges
+                handleAutoScroll(touch.clientY);
+                
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const targetRow = elementBelow ? elementBelow.closest('.task-row') : null;
+                
+                // Remove drag-over from all rows
+                document.querySelectorAll('.task-row.drag-over').forEach(row => {
+                    row.classList.remove('drag-over');
+                });
+                
+                // Add drag-over to current target
+                if (targetRow && targetRow !== taskRow && targetRow.hasAttribute('draggable')) {
+                    targetRow.classList.add('drag-over');
+                }
+            }
+        }, { passive: false });
+        
+        timeline.addEventListener('touchend', function(e) {
+            if (isDraggingTouch) {
+                // Only preventDefault if we were actually dragging
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Stop auto-scrolling
+                stopAutoScroll();
+                
+                const touch = e.changedTouches[0];
+                const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                const targetRow = elementBelow ? elementBelow.closest('.task-row') : null;
+                
+                if (targetRow && targetRow !== taskRow && targetRow.hasAttribute('draggable')) {
+                    const incompleteTasks = getIncompleteTaskRows();
+                    
+                    if (incompleteTasks.includes(targetRow)) {
+                        const draggedIndex = incompleteTasks.indexOf(taskRow);
+                        const targetIndex = incompleteTasks.indexOf(targetRow);
+                        
+                        if (draggedIndex < targetIndex) {
+                            targetRow.parentNode.insertBefore(taskRow, targetRow.nextSibling);
+                        } else {
+                            targetRow.parentNode.insertBefore(taskRow, targetRow);
+                        }
+                        
+                        // Add drop animation
+                        taskRow.classList.add('drop-animation');
+                        setTimeout(() => {
+                            taskRow.classList.remove('drop-animation');
+                        }, 300);
+                        
+                        // Haptic feedback on successful drop
+                        if (navigator.vibrate) {
+                            navigator.vibrate([30, 10, 30]);
+                        }
+                        
+                        saveTaskOrder();
+                    }
+                }
+                
+                // Cleanup
+                removeDragGhost();
+                taskRow.classList.remove('dragging');
+                document.querySelectorAll('.task-row.drag-over').forEach(row => {
+                    row.classList.remove('drag-over');
+                });
+                
+                draggedElement = null;
+                isDraggingTouch = false;
+                touchDragElement = null;
+            }
+        }, { passive: false });
+        
+        timeline.addEventListener('touchcancel', function(e) {
+            if (isDraggingTouch) {
+                // Stop auto-scrolling
+                stopAutoScroll();
+                
+                removeDragGhost();
+                taskRow.classList.remove('dragging');
+                document.querySelectorAll('.task-row.drag-over').forEach(row => {
+                    row.classList.remove('drag-over');
+                });
+                
+                draggedElement = null;
+                isDraggingTouch = false;
+                touchDragElement = null;
+            }
+        });
+    }
+    
+    // Create a ghost element for drag visualization
+    function createDragGhost(taskRow) {
+        removeDragGhost(); // Remove any existing ghost
+        
+        dragGhost = taskRow.cloneNode(true);
+        dragGhost.classList.add('drag-ghost');
+        dragGhost.style.position = 'fixed';
+        dragGhost.style.pointerEvents = 'none';
+        dragGhost.style.zIndex = '9999';
+        dragGhost.style.width = taskRow.offsetWidth + 'px';
+        dragGhost.style.opacity = '0.8';
+        dragGhost.style.transform = 'rotate(3deg) scale(1.05)';
+        dragGhost.style.transition = 'transform 0.2s ease';
+        
+        const rect = taskRow.getBoundingClientRect();
+        dragGhost.style.left = rect.left + 'px';
+        dragGhost.style.top = rect.top + 'px';
+        
+        document.body.appendChild(dragGhost);
+    }
+    
+    // Remove drag ghost element
+    function removeDragGhost() {
+        if (dragGhost && dragGhost.parentNode) {
+            dragGhost.parentNode.removeChild(dragGhost);
+            dragGhost = null;
+        }
+    }
+    
+    // Auto-scroll when dragging near edges
+    function handleAutoScroll(clientY) {
+        const SCROLL_THRESHOLD = 100; // pixels from edge to start scrolling
+        const SCROLL_SPEED = 10; // pixels per frame
+        
+        const windowHeight = window.innerHeight;
+        
+        // Clear existing interval
+        if (autoScrollInterval) {
+            clearInterval(autoScrollInterval);
+            autoScrollInterval = null;
+        }
+        
+        // Scroll up if near top
+        if (clientY < SCROLL_THRESHOLD) {
+            console.log('Auto-scrolling UP', clientY); // Debug
+            autoScrollInterval = setInterval(() => {
+                window.scrollBy({
+                    top: -SCROLL_SPEED,
+                    behavior: 'auto'
+                });
+                // Update ghost position while scrolling
+                if (dragGhost) {
+                    const currentTop = parseInt(dragGhost.style.top);
+                    dragGhost.style.top = (currentTop - SCROLL_SPEED) + 'px';
+                }
+            }, 16); // ~60fps
+        }
+        // Scroll down if near bottom
+        else if (clientY > windowHeight - SCROLL_THRESHOLD) {
+            console.log('Auto-scrolling DOWN', clientY, windowHeight); // Debug
+            autoScrollInterval = setInterval(() => {
+                window.scrollBy({
+                    top: SCROLL_SPEED,
+                    behavior: 'auto'
+                });
+                // Update ghost position while scrolling
+                if (dragGhost) {
+                    const currentTop = parseInt(dragGhost.style.top);
+                    dragGhost.style.top = (currentTop + SCROLL_SPEED) + 'px';
+                }
+            }, 16);
+        }
+    }
+    
+    // Stop auto-scroll
+    function stopAutoScroll() {
+        if (autoScrollInterval) {
+            clearInterval(autoScrollInterval);
+            autoScrollInterval = null;
+        }
+    }
+    
+    // Get all incomplete task rows in order
+    function getIncompleteTaskRows() {
+        return Array.from(tasksContainer.querySelectorAll('.task-row')).filter(row => {
+            const task = row.querySelector('.task');
+            const status = task.className.match(/status-(\w+)/)[1];
+            return status !== 'done';
+        });
+    }
+    
+    // Save task order to server
+    async function saveTaskOrder() {
+        const incompleteTasks = getIncompleteTaskRows();
+        const taskIds = incompleteTasks.map(row => row.dataset.taskId);
+        
+        try {
+            const response = await fetch(`/api/project/${projectId}/tasks/reorder`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ task_ids: taskIds })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Ошибка при изменении порядка задач');
+            }
+
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error('Не удалось сохранить порядок задач');
+            }
+        } catch (error) {
+            console.error('Error saving task order:', error);
+            // Don't show alert for order changes, just log
+        }
+    }
+
     // Setup long press on task element
     function setupLongPress(taskElement) {
         let touchMoved = false;
         
         // Mouse events
         taskElement.addEventListener('mousedown', function(e) {
-            e.preventDefault();
+            // Don't prevent default here - it blocks dragging
+            // Only start long press timer
             isLongPress = false;
             startPress(taskElement);
         });
@@ -290,8 +738,12 @@ document.addEventListener('DOMContentLoaded', function() {
         taskElement.classList.remove(`status-${oldStatus}`);
         taskElement.classList.add(`status-${newStatus}`);
         
-        // Update timeline dot
+        // Update draggable state and timeline classes
         if (newStatus === 'done') {
+            // Task is now completed - remove draggable
+            taskRow.removeAttribute('draggable');
+            timeline.classList.remove('draggable-handle');
+            
             timelineDot.classList.add('completed');
             // Add time placeholder
             const now = new Date();
@@ -303,6 +755,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Set temporary completed_at for proper sorting
             taskElement.dataset.completedAt = now.toISOString();
         } else {
+            // Task is now incomplete - make it draggable
+            taskRow.setAttribute('draggable', 'true');
+            timeline.classList.add('draggable-handle');
+            setupDragAndDrop(taskRow);
+            
             timelineDot.classList.remove('completed');
             // Remove time if exists
             const timelineTime = timeline.querySelector('.timeline-time');
@@ -361,12 +818,18 @@ document.addEventListener('DOMContentLoaded', function() {
             taskElement.classList.remove(`status-${newStatus}`);
             taskElement.classList.add(`status-${oldStatus}`);
             
-            // Rollback timeline
+            // Rollback draggable state
             if (oldStatus === 'done') {
+                // Was completed, should not be draggable
+                taskRow.removeAttribute('draggable');
+                timeline.classList.remove('draggable-handle');
                 timelineDot.classList.add('completed');
                 // Restore previous completed_at value if it existed
                 // (We don't have the old value saved, but server should have it)
             } else {
+                // Was incomplete, should be draggable
+                taskRow.setAttribute('draggable', 'true');
+                timeline.classList.add('draggable-handle');
                 timelineDot.classList.remove('completed');
                 const timelineTime = timeline.querySelector('.timeline-time');
                 if (timelineTime) {
@@ -582,6 +1045,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.task').forEach(function(taskElement) {
         setupLongPress(taskElement);
         setupClickHandler(taskElement);
+    });
+    
+    // Setup drag and drop for existing incomplete task rows
+    document.querySelectorAll('.task-row[draggable="true"]').forEach(function(taskRow) {
+        setupDragAndDrop(taskRow);
     });
     
     // Convert all existing timeline times to user's timezone
