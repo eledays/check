@@ -12,16 +12,40 @@ function formatTimeInUserTimezone(isoString) {
         return '';
     }
 
-    // Format time in user's local timezone
-    const result = date.toLocaleTimeString('ru-RU', { 
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const taskDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    // Format time
+    const time = date.toLocaleTimeString('ru-RU', { 
         hour: '2-digit', 
         minute: '2-digit',
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
     });
     
-    console.log(`Formatted time for ${isoString} is ${result}`);
-
-    return result
+    // If today - just show time
+    if (taskDate.getTime() === today.getTime()) {
+        return time;
+    }
+    
+    // If yesterday - show "вчера"
+    if (taskDate.getTime() === yesterday.getTime()) {
+        return 'вчера';
+    }
+    
+    // For other dates
+    const day = date.getDate();
+    const month = date.toLocaleString('ru-RU', { month: 'long' });
+    
+    // If same year - show: day month time
+    if (date.getFullYear() === now.getFullYear()) {
+        return `${day} ${month} ${time}`;
+    }
+    
+    // If previous year - show: day month year time
+    return `${day} ${month} ${date.getFullYear()} ${time}`;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
