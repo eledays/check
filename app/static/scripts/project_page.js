@@ -1083,4 +1083,49 @@ document.addEventListener('DOMContentLoaded', function() {
             timeElement.textContent = formatTimeInUserTimezone(isoTime);
         }
     });
+    
+    // Auto-scroll to show at most one completed task on page load
+    function scrollToShowOneCompletedTask() {
+        const taskRows = Array.from(tasksContainer.querySelectorAll('.task-row'));
+        
+        // Find all completed tasks
+        const completedTasks = taskRows.filter(row => {
+            const task = row.querySelector('.task');
+            const status = task.className.match(/status-(\w+)/);
+            return status && status[1] === 'done';
+        });
+        
+        // Find first incomplete task
+        const firstIncompleteTask = taskRows.find(row => {
+            const task = row.querySelector('.task');
+            const status = task.className.match(/status-(\w+)/);
+            return status && status[1] !== 'done';
+        });
+        
+        // If there are 2+ completed tasks, scroll to show only the last one
+        if (completedTasks.length >= 2) {
+            // Get second-to-last completed task (this one should be hidden/at top edge)
+            const secondToLastCompleted = completedTasks[completedTasks.length - 2];
+            
+            requestAnimationFrame(() => {
+                // Scroll so that second-to-last is at the very top (hidden)
+                // This leaves only the last completed task visible
+                tasksContainer.scrollTop = secondToLastCompleted.offsetTop - tasksContainer.offsetTop + secondToLastCompleted.offsetHeight;
+            });
+        } else if (completedTasks.length === 1 && firstIncompleteTask) {
+            // If only one completed task, scroll to show it at top
+            const lastCompletedTask = completedTasks[0];
+            requestAnimationFrame(() => {
+                tasksContainer.scrollTop = lastCompletedTask.offsetTop - tasksContainer.offsetTop;
+            });
+        } else if (firstIncompleteTask) {
+            // If no completed tasks, scroll to first incomplete task
+            requestAnimationFrame(() => {
+                tasksContainer.scrollTop = firstIncompleteTask.offsetTop - tasksContainer.offsetTop;
+            });
+        }
+    }
+    
+    // Call scroll function after a short delay to ensure layout is complete
+    setTimeout(scrollToShowOneCompletedTask, 100);
 });

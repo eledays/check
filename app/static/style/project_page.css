@@ -35,18 +35,37 @@ body {
     width: 100%;
     gap: 0;
     position: relative;
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+    margin-bottom: 16px;
+    
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+    
+    /* Custom scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--tertiary-color) transparent;
 }
 
-/* Continuous timeline line across all tasks */
-.tasks-timeline::before {
-    content: '';
-    position: absolute;
-    top: 12px;
-    bottom: 12px;
-    left: 20px; /* Center line with timeline dots (40px timeline / 2) */
-    width: 2px;
+/* Webkit scrollbar styling */
+.tasks-timeline::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tasks-timeline::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tasks-timeline::-webkit-scrollbar-thumb {
     background-color: var(--tertiary-color);
-    z-index: 0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.tasks-timeline::-webkit-scrollbar-thumb:hover {
+    background-color: var(--secondary-color);
 }
 
 .task-row {
@@ -56,6 +75,23 @@ body {
     position: relative;
     transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1),
                 opacity 0.4s ease;
+}
+
+/* Timeline line that connects all tasks - drawn as part of each row */
+.task-row::before {
+    content: '';
+    position: absolute;
+    left: 20px; /* Center line with timeline dots (40px timeline / 2) */
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--tertiary-color);
+    z-index: 0;
+}
+
+/* Shorten line on last task to end at dot */
+.task-row:last-child::before {
+    bottom: 50%;
 }
 
 /* Dragging states */
