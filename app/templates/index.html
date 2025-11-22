@@ -17,9 +17,10 @@
 <body>
     <div class="projects">
         {% for project in projects %}
-            <div class="project">
-                <h2><a href="/project/{{ project.id }}">{{ project.name }}</a></h2>
-                <div class="tasks">
+            <div class="project" data-id="{{ project.id }}" onclick="location.href='/project/{{ project.id }}'">
+                <h2>{{ project.name }}</h2>
+                <p class="description">{{ project.description }}</p>
+                <!-- <div class="tasks">
                     {% for task in project.tasks %}
                         <div class="task status-{{ task.status.value }}" id="task-{{ task.id }}">
                             <span class="material-symbols-sharp notranslate no-select">
@@ -28,7 +29,7 @@
                             <h3>{{ task.title }}</h3>
                         </div>
                     {% endfor %}
-                </div>
+                </div> -->
             </div>
         {% endfor %}
 
