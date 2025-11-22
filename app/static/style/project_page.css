@@ -539,6 +539,21 @@ body {
     background-color: var(--tertiary-color);
 }
 
+/* Delete button */
+#delete-project-button {
+    display: inline-block;
+    padding: 12px 20px;
+    background-color: transparent;
+    color: #9e2733;
+    text-decoration: none;
+    border: 1px solid #9e2733;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    margin-left: 8px;
+}
+
 /* Timeline styles */
 .timeline {
     display: flex;
@@ -635,4 +650,37 @@ body {
 
 .btn-edit .material-symbols-sharp {
     font-size: 20px;
+}
+
+/* Delete project section */
+.delete-project-section {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--tertiary-color);
+}
+
+.delete-project-section #delete-project-button {
+    width: 100%;
+    padding: 12px 20px;
+    background-color: transparent;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.delete-project-section #delete-project-button:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Modal paragraph */
+.modal-content p {
+    color: var(--secondary-color);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
 }

@@ -76,13 +76,29 @@
                 {% endif %}
             </div>
 
-            <div id="submit">
+            <div id="actions">
                 {{ form.submit(id="submit-button") }}
                 <a href="{{ url_for('main.project_detail', project_id=project.id) }}" class="cancel-button">Отмена</a>
+                <button type="button" id="delete-project-button">Удалить</button>
             </div>
         </form>
+
     </div>
     
+    <!-- Confirmation Modal -->
+    <div id="delete-confirmation-modal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h3>Удалить проект?</h3>
+            <p>Вы уверены, что хотите удалить проект "{{ project.name }}"? Это действие нельзя отменить. Все задачи проекта также будут удалены.</p>
+            <div class="modal-actions">
+                <button id="confirm-delete-button" class="btn-danger" data-delete-url="{{ url_for('main.delete_project_endpoint', project_id=project.id) }}">Удалить</button>
+                <button id="cancel-delete-button" class="btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='scripts/edit_project.js') }}"></script>
     <script src="{{ url_for('static', filename='scripts/telegram-init.js') }}"></script>
 </body>
 </html>

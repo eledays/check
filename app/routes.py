@@ -12,7 +12,7 @@ from flask import (
     current_app,
 )
 
-from app.crud import get_user_projects, create_project, update_project, update_task, delete_task
+from app.crud import get_user_projects, create_project, update_project, update_task, delete_task, delete_project
 from app.models import Project, User, Task, TaskStatus
 from app.forms import ProjectForm, EditProjectForm, TaskForm
 from app.auth import verify_telegram_web_app_data, get_or_create_user
@@ -102,17 +102,19 @@ def project_detail(project_id: int):
 
     # Sort tasks: completed tasks first (by completed_at asc - oldest first), then incomplete tasks (by order)
     completed_tasks = [t for t in project.tasks if t.status == TaskStatus.DONE]
-    incomplete_tasks = [t for t in project.tasks if t.status != TaskStatus.DONE]
-    
+    incomplete_tasks = [
+        t for t in project.tasks if t.status != TaskStatus.DONE]
+
     # Sort completed tasks by completion time (oldest first)
-    completed_tasks.sort(key=lambda t: t.completed_at if t.completed_at else t.created_at, reverse=False)
-    
+    completed_tasks.sort(
+        key=lambda t: t.completed_at if t.completed_at else t.created_at, reverse=False)
+
     # Sort incomplete tasks by order field
     incomplete_tasks.sort(key=lambda t: t.order)
-    
+
     # Combine: completed first, then incomplete
     sorted_tasks = completed_tasks + incomplete_tasks
-    
+
     return render_template("project_page.html", project=project, sorted_tasks=sorted_tasks)
 
 
@@ -152,7 +154,7 @@ def edit_project(project_id: int):
         return "Access denied", 403
 
     form = EditProjectForm(obj=project)
-    
+
     if form.validate_on_submit():
         # Update project with validated and sanitized data from form
         updated_project = update_project(
@@ -162,13 +164,36 @@ def edit_project(project_id: int):
             description=form.description.data,
             goals=form.goals.data,
         )
-        
+
         if updated_project:
             return redirect(url_for("main.project_detail", project_id=project_id))
         else:
             flash("Ошибка при обновлении проекта", "error")
 
     return render_template("edit_project.html", form=form, project=project)
+
+
+@bp.route("/project/<int:project_id>/delete", methods=["POST"])
+def delete_project_endpoint(project_id: int):
+    """Delete a project."""
+    user: User | None = get_current_user()
+    if not user:
+        return "Unauthorized", 401
+
+    project: Project | None = Project.query.get(project_id)
+    if project is None:
+        return "Project not found", 404
+
+    # Check if user owns this project
+    if project.creator_id != user.id:
+        return "Access denied", 403
+
+    # Delete the project
+    success = delete_project(project_id)
+    if success:
+        return redirect(url_for("main.index"))
+    else:
+        return redirect(url_for("main.edit_project", project_id=project_id))
 
 
 @bp.route("/api/project/<int:project_id>/task", methods=["POST"])
@@ -188,7 +213,7 @@ def create_task(project_id: int):
 
     # Use TaskForm for validation and CSRF protection
     form = TaskForm(data=request.get_json(), meta={'csrf': False})
-    
+
     if not form.validate():
         # Return first validation error
         errors = form.errors
@@ -204,19 +229,19 @@ def create_task(project_id: int):
     title = form.title.data
     if not title:
         return jsonify({"error": "Title is required"}), 400
-    
+
     # Get the highest order value for incomplete tasks in this project
     max_order = db.session.query(db.func.max(Task.order)).filter(
         Task.project_id == project_id,
         Task.status != TaskStatus.DONE
     ).scalar() or -1
-        
+
     task = Task()
     task.title = title
     task.status = TaskStatus.TODO
     task.project_id = project_id
     task.order = max_order + 1  # Add at the end
-    
+
     db.session.add(task)
     db.session.commit()
 
@@ -250,13 +275,13 @@ def update_task_endpoint(project_id: int, task_id: int):
     task: Task | None = Task.query.get(task_id)
     if task is None:
         return jsonify({"error": "Task not found"}), 404
-    
+
     if task.project_id != project_id:
         return jsonify({"error": "Task does not belong to this project"}), 403
 
     # Use TaskForm for validation
     form = TaskForm(data=request.get_json(), meta={'csrf': False})
-    
+
     if not form.validate():
         errors = form.errors
         first_error = "Validation error"
@@ -305,7 +330,7 @@ def toggle_task_status(project_id: int, task_id: int):
     task: Task | None = Task.query.get(task_id)
     if task is None:
         return jsonify({"error": "Task not found"}), 404
-    
+
     if task.project_id != project_id:
         return jsonify({"error": "Task does not belong to this project"}), 403
 
@@ -315,8 +340,9 @@ def toggle_task_status(project_id: int, task_id: int):
         task.completed_at = None  # Clear completion time when unmarking as done
     else:
         task.status = TaskStatus.DONE
-        task.completed_at = datetime.datetime.now(datetime.timezone.utc)  # Set completion time in UTC
-    
+        task.completed_at = datetime.datetime.now(
+            datetime.timezone.utc)  # Set completion time in UTC
+
     db.session.commit()
 
     # Format completed_at with explicit UTC timezone for JavaScript
@@ -326,7 +352,8 @@ def toggle_task_status(project_id: int, task_id: int):
         dt = task.completed_at
         if dt.tzinfo is None:  # type: ignore[union-attr]
             # If stored datetime is naive, treat it as UTC
-            completed_at_iso = dt.replace(tzinfo=datetime.timezone.utc).isoformat()  # type: ignore[union-attr]
+            completed_at_iso = dt.replace(  # type: ignore[union-attr]
+                tzinfo=datetime.timezone.utc).isoformat()
         else:
             completed_at_iso = dt.isoformat()  # type: ignore[union-attr]
 
@@ -360,7 +387,7 @@ def delete_task_endpoint(project_id: int, task_id: int):
     task: Task | None = Task.query.get(task_id)
     if task is None:
         return jsonify({"error": "Task not found"}), 404
-    
+
     if task.project_id != project_id:
         return jsonify({"error": "Task does not belong to this project"}), 403
 
@@ -389,7 +416,7 @@ def reorder_tasks(project_id: int):
 
     data = request.get_json()
     task_ids = data.get("task_ids", [])
-    
+
     if not task_ids or not isinstance(task_ids, list):
         return jsonify({"error": "Invalid task_ids"}), 400
 
@@ -399,7 +426,7 @@ def reorder_tasks(project_id: int):
             task: Task | None = Task.query.get(task_id)
             if task and task.project_id == project_id:
                 task.order = index
-        
+
         db.session.commit()
         return jsonify({"success": True})
     except Exception as e:

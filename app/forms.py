@@ -16,7 +16,7 @@ class EditProjectForm(FlaskForm):
     short_name = StringField("Короткое имя", validators=[DataRequired(), Length(max=16)])
     description = TextAreaField("Описание", validators=[Optional(), Length(max=256)])
     goals = TextAreaField("Цели", validators=[Optional(), Length(max=4096)])
-    submit = SubmitField("Сохранить изменения")
+    submit = SubmitField("Сохранить")
 
 
 class TaskForm(FlaskForm):

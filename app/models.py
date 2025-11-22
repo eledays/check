@@ -37,8 +37,8 @@ class Project(db.Model):
 
     # Relationships
     creator = relationship("User", back_populates="projects")
-    tasks = relationship("Task", back_populates="project", lazy=True)
-    notes = relationship("Note", back_populates="project", lazy=True)
+    tasks = relationship("Task", back_populates="project", lazy=True, cascade="all, delete-orphan")
+    notes = relationship("Note", back_populates="project", lazy=True, cascade="all, delete-orphan")
 
     created_at = mapped_column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     updated_at = mapped_column(

@@ -112,3 +112,19 @@ def update_project(
     
     db.session.commit()
     return project
+
+
+def delete_project(project_id: int) -> bool:
+    """
+    Удаляет проект из базы данных вместе со всеми его задачами
+
+    :param project_id: ID проекта
+    :return: True, если проект был удален, False, если проект не найден
+    """
+    project: Project | None = Project.query.get(project_id)
+    if project is None:
+        return False
+    
+    db.session.delete(project)
+    db.session.commit()
+    return True
