@@ -36,6 +36,11 @@
                 {{ form.goals(cols=60, rows=4, placeholder="Цели, желаемые результаты") }}
             </div>
 
+            <div id="periodicity">
+                <p>Периодичность возврата</p>
+                {{ form.periodicity() }}
+            </div>
+
             <div id="submit">
                 {{ form.submit() }}
             </div>

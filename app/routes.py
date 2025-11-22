@@ -82,8 +82,17 @@ def index():
         projects = []
     else:
         projects = get_user_projects(user.id)
+    
+    # Calculate staleness for each project
+    projects_with_staleness = []
+    for project in projects:
+        staleness = project.get_staleness_ratio()
+        projects_with_staleness.append({
+            'project': project,
+            'staleness_ratio': staleness
+        })
 
-    return render_template("index.html", projects=projects)
+    return render_template("index.html", projects=projects_with_staleness)
 
 
 @bp.route("/project/<int:project_id>")
@@ -132,6 +141,7 @@ def new_project():
             description=form.description.data,
             goals=form.goals.data,
             creator_id=user.id,
+            periodicity=form.periodicity.data,
         )
         return redirect(url_for("main.index"))
 
@@ -163,6 +173,7 @@ def edit_project(project_id: int):
             short_name=form.short_name.data,
             description=form.description.data,
             goals=form.goals.data,
+            periodicity=form.periodicity.data,
         )
 
         if updated_project:

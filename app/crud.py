@@ -1,5 +1,5 @@
 from app import db
-from app.models import Project, Task
+from app.models import Project, Task, ProjectPeriodicity
 
 from flask_sqlalchemy.query import Query
 
@@ -21,6 +21,7 @@ def create_project(
     description: str | None,
     goals: str | None,
     creator_id: int | None,
+    periodicity: str | None = None,
 ) -> Project:
     """
     Создает новый проект и сохраняет его в базе данных
@@ -30,6 +31,7 @@ def create_project(
     :param description: Описание проекта
     :param goals: Цели проекта
     :param creator_id: ID создателя проекта
+    :param periodicity: Периодичность возврата к проекту
     :return: Созданный проект
     """
     if name is None or short_name is None or creator_id is None:
@@ -41,6 +43,15 @@ def create_project(
     project.description = description
     project.goals = goals
     project.creator_id = creator_id
+    
+    # Set periodicity
+    if periodicity:
+        try:
+            project.periodicity = ProjectPeriodicity[periodicity]
+        except KeyError:
+            project.periodicity = ProjectPeriodicity.WEEKLY
+    else:
+        project.periodicity = ProjectPeriodicity.WEEKLY
     
     db.session.add(project)
     db.session.commit()
@@ -86,6 +97,7 @@ def update_project(
     short_name: str | None = None,
     description: str | None = None,
     goals: str | None = None,
+    periodicity: str | None = None,
 ) -> Project | None:
     """
     Обновляет данные проекта
@@ -95,6 +107,7 @@ def update_project(
     :param short_name: Новое короткое имя проекта
     :param description: Новое описание проекта
     :param goals: Новые цели проекта
+    :param periodicity: Новая периодичность возврата к проекту
     :return: Обновленный проект или None, если проект не найден
     """
     project: Project | None = Project.query.get(project_id)
@@ -109,6 +122,11 @@ def update_project(
         project.description = description
     if goals is not None:
         project.goals = goals
+    if periodicity is not None:
+        try:
+            project.periodicity = ProjectPeriodicity[periodicity]
+        except KeyError:
+            pass  # Keep existing value if invalid
     
     db.session.commit()
     return project

@@ -76,6 +76,18 @@
                 {% endif %}
             </div>
 
+            <div id="periodicity">
+                <p>Периодичность возврата</p>
+                {{ form.periodicity() }}
+                {% if form.periodicity.errors %}
+                    <ul class="errors">
+                    {% for error in form.periodicity.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
             <div id="actions">
                 {{ form.submit(id="submit-button") }}
                 <a href="{{ url_for('main.project_detail', project_id=project.id) }}" class="cancel-button">Отмена</a>
