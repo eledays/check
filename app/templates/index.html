@@ -19,22 +19,10 @@
         {% for item in projects %}
             {% set project = item.project %}
             {% set staleness = item.staleness_ratio %}
-            {# Start fading earlier at 0.3 (30% of periodicity), reach minimum at 2.0+ #}
-            {% if staleness < 0.3 %}
-                {% set opacity = 1.0 %}
-                {% set bg_lightness = 0 %}
-            {% else %}
-                {# Fade from 1.0 to 0.5 opacity as staleness goes from 0.3 to 2.0 #}
-                {% set fade_factor = ((staleness - 0.3) / 1.7)|float %}
-                {% set fade_factor = [fade_factor, 1.0]|min %}
-                {% set opacity = 1.0 - (fade_factor * 0.5) %}
-                {# Lighten background from #000 to #555 #}
-                {% set bg_lightness = (fade_factor * 85)|int %}
-            {% endif %}
             <div class="project" 
                  data-id="{{ project.id }}" 
-                 onclick="location.href='/project/{{ project.id }}'"
-                 style="opacity: {{ '%.2f'|format(opacity) }}; background-color: hsl(0, 0%, {{ bg_lightness }}%);">
+                 data-staleness="{{ '%.3f'|format(staleness) }}"
+                 onclick="location.href='/project/{{ project.id }}'">
                 <h2>{{ project.name }}</h2>
                 <p class="description">{{ project.description }}</p>
             </div>
@@ -44,6 +32,7 @@
             <a href="/project/new">+ Новый проект</a>
         </div>
 
+        <script src="{{ url_for('static', filename='scripts/project_staleness.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/telegram-init.js') }}"></script>
         <script src="{{ url_for('static', filename='scripts/todo.js') }}"></script>
     </div>

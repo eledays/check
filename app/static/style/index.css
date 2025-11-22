@@ -13,6 +13,12 @@
     --title-font-weight: 600;
     --id-font-size: .9rem;
     --id-font-weight: 400;
+
+    /* Staleness settings - opacity range for project fading */
+    --project-fresh-opacity: 1.0;      /* Opacity for fresh projects (staleness < threshold) */
+    --project-stale-opacity: 0.5;      /* Opacity for very stale projects (staleness >= max) */
+    --staleness-start: 0.3;            /* Start fading at 30% of periodicity */
+    --staleness-max: 2.0;              /* Maximum staleness for fade calculation */
 }
 
 * {
