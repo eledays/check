@@ -4,14 +4,37 @@ body {
 }
 
 .content {
-    padding: 16px;
     background-color: var(--background-color);
-    min-height: 100vh;
-    padding-bottom: 64px; /* Space for fixed new task form */
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+        "header"
+        "tasks"
+        "input";
 }
 
 .info {
-    margin-bottom: 32px;
+    grid-area: header;
+    padding: 16px;
+    z-index: 100;
+    background-color: var(--background-color);
+    position: relative;
+}
+
+.info::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to bottom, 
+                                rgb(0, 0, 0) 0%, 
+                                rgba(0, 0, 0, 0) 100%);
+    pointer-events: none;
+    z-index: 1;
 }
 
 .info h1 {
@@ -30,16 +53,16 @@ body {
 }
 
 .tasks-timeline {
+    grid-area: tasks;
     display: flex;
     flex-direction: column;
     width: 100%;
     gap: 0;
     position: relative;
-    max-height: 70vh;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-right: 4px;
-    margin-bottom: 16px;
+    padding: 0 16px;
+    box-sizing: border-box;
     
     /* Smooth scrolling */
     scroll-behavior: smooth;
@@ -47,6 +70,9 @@ body {
     /* Custom scrollbar styling */
     scrollbar-width: thin;
     scrollbar-color: var(--tertiary-color) transparent;
+
+    padding-bottom: 64px; /* Space for fixed input form */
+    padding-top: 20px; /* Space for header fade effect */
 }
 
 /* Webkit scrollbar styling */
@@ -196,6 +222,7 @@ body {
     outline: none;
     color: var(--primary-color);
     font-size: 1rem;
+    z-index: 100;
 }
 
 .new-project-form #name {
@@ -255,20 +282,23 @@ body {
 }
 
 .new-task-form {
+    grid-area: input;
     display: flex;
     gap: 12px;
-    margin-top: 24px;
     align-items: center;
+    width: 100%;
+    padding: 16px;
+    box-sizing: border-box;
+    z-index: 50;
     position: fixed;
-    bottom: 10px;
-    left: 16px;
-    width: calc(100% - 32px);
+    bottom: 0;
+    left: 0;
 }
 
 .new-task-form input {
     flex: 1;
-    background-color: rgba(var(--background-color-rgb), 0.8);
-    backdrop-filter: blur(10px);
+    background-color: rgba(var(--background-color), .1);
+    backdrop-filter: blur(8px);
     border: 1px solid var(--tertiary-color);
     border-radius: 4px;
     padding: 12px 16px;
@@ -453,25 +483,8 @@ body {
 /* Project actions */
 .project-actions {
     margin-top: 12px;
-}
-
-.btn-edit {
-    display: inline-block;
-    padding: 8px 16px;
-    background-color: transparent;
-    color: var(--primary-color);
-    text-decoration: none;
-    border: 1px solid var(--primary-color);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: background-color 0.2s ease, opacity 0.2s ease;
-}
-
-.btn-edit:hover {
-    background-color: var(--primary-color);
-    color: var(--background-color);
-    opacity: 0.9;
+    display: flex;
+    justify-content: flex-end;
 }
 
 /* Flash messages */
@@ -536,6 +549,7 @@ body {
     min-width: 40px;
     padding: 12px 0;
     min-height: 48px; /* Fixed height for all timelines */
+    z-index: 1;
 }
 
 /* Draggable handle styles */
@@ -555,6 +569,7 @@ body {
 /* Remove individual timeline lines - now handled by ::before on parent */
 .timeline-line {
     display: none;
+    z-index: 1;
 }
 
 .timeline-dot {
@@ -564,7 +579,7 @@ body {
     border: 2px solid var(--primary-color);
     background-color: var(--background-color);
     position: relative;
-    z-index: 1;
+    z-index: 0;
     transition: all 0.3s ease;
 }
 
@@ -585,3 +600,39 @@ body {
     white-space: nowrap;
 }
 
+.title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.title h1 {
+    flex: 1;
+    margin: 0;
+}
+
+.btn-edit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    background-color: transparent;
+    color: var(--tertiary-color);
+    text-decoration: none;
+    border: 1px solid var(--tertiary-color);
+    border-radius: 8px;
+    font-size: 1.2rem;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+    flex-shrink: 0;
+}
+
+.btn-edit:hover {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+    opacity: 0.9;
+}
+
+.btn-edit .material-symbols-sharp {
+    font-size: 20px;
+}

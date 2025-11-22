@@ -1088,41 +1088,30 @@ document.addEventListener('DOMContentLoaded', function() {
     function scrollToShowOneCompletedTask() {
         const taskRows = Array.from(tasksContainer.querySelectorAll('.task-row'));
         
-        // Find all completed tasks
-        const completedTasks = taskRows.filter(row => {
-            const task = row.querySelector('.task');
-            const status = task.className.match(/status-(\w+)/);
-            return status && status[1] === 'done';
-        });
-        
         // Find first incomplete task
-        const firstIncompleteTask = taskRows.find(row => {
+        const firstIncompleteTaskIndex = taskRows.findIndex(row => {
             const task = row.querySelector('.task');
             const status = task.className.match(/status-(\w+)/);
             return status && status[1] !== 'done';
         });
         
-        // If there are 2+ completed tasks, scroll to show only the last one
-        if (completedTasks.length >= 2) {
-            // Get second-to-last completed task (this one should be hidden/at top edge)
-            const secondToLastCompleted = completedTasks[completedTasks.length - 2];
+        // If there's an incomplete task and there's at least one completed task before it
+        if (firstIncompleteTaskIndex > 0) {
+            // Scroll to the last completed task (one before first incomplete)
+            const lastCompletedTask = taskRows[firstIncompleteTaskIndex - 1];
             
             requestAnimationFrame(() => {
-                // Scroll so that second-to-last is at the very top (hidden)
-                // This leaves only the last completed task visible
-                tasksContainer.scrollTop = secondToLastCompleted.offsetTop - tasksContainer.offsetTop + secondToLastCompleted.offsetHeight;
+                // Get the position relative to the scrollable container
+                const containerRect = tasksContainer.getBoundingClientRect();
+                const taskRect = lastCompletedTask.getBoundingClientRect();
+                
+                // Calculate how much to scroll to put the last completed task at the very top
+                const scrollAmount = tasksContainer.scrollTop + (taskRect.top - containerRect.top);
+                tasksContainer.scrollTop = scrollAmount;
             });
-        } else if (completedTasks.length === 1 && firstIncompleteTask) {
-            // If only one completed task, scroll to show it at top
-            const lastCompletedTask = completedTasks[0];
-            requestAnimationFrame(() => {
-                tasksContainer.scrollTop = lastCompletedTask.offsetTop - tasksContainer.offsetTop;
-            });
-        } else if (firstIncompleteTask) {
-            // If no completed tasks, scroll to first incomplete task
-            requestAnimationFrame(() => {
-                tasksContainer.scrollTop = firstIncompleteTask.offsetTop - tasksContainer.offsetTop;
-            });
+        } else if (firstIncompleteTaskIndex === 0) {
+            // If first task is incomplete, scroll to top (no completed tasks to show)
+            tasksContainer.scrollTop = 0;
         }
     }
     
