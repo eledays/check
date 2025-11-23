@@ -47,12 +47,12 @@ class UserSettings(db.Model):
     # Relationships
     user = relationship("User", back_populates="settings")
     
-    created_at = mapped_column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    created_at = mapped_column(DateTime, nullable=False, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     updated_at = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
+        onupdate=lambda: datetime.datetime.now(datetime.timezone.utc),
     )
 
 
@@ -77,12 +77,12 @@ class Project(db.Model):
     tasks = relationship("Task", back_populates="project", lazy=True, cascade="all, delete-orphan")
     notes = relationship("Note", back_populates="project", lazy=True, cascade="all, delete-orphan")
 
-    created_at = mapped_column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    created_at = mapped_column(DateTime, nullable=False, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     updated_at = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
+        onupdate=lambda: datetime.datetime.now(datetime.timezone.utc),
     )
 
     def get_last_activity_date(self) -> datetime.datetime:
@@ -98,12 +98,17 @@ class Project(db.Model):
             return last_completed
         return self.updated_at
     
-    def get_staleness_ratio(self) -> float:
+    def get_staleness_ratio(self, last_activity: Optional[datetime.datetime] = None) -> float:
         """
         Calculate how stale this project is based on periodicity.
         Returns a ratio: 0 = completely fresh, 1.0 = at the periodicity threshold, >1.0 = overdue
+        
+        Args:
+            last_activity: Optional pre-calculated last activity date to avoid N+1 queries
         """
-        last_activity = self.get_last_activity_date()
+        if last_activity is None:
+            last_activity = self.get_last_activity_date()
+            
         now = datetime.datetime.now(datetime.timezone.utc)
         
         # Make last_activity timezone-aware if it isn't
@@ -129,6 +134,11 @@ class Project(db.Model):
 
 class Task(db.Model):
     __tablename__ = "task"
+    __table_args__ = (
+        db.Index('idx_task_project_id', 'project_id'),
+        db.Index('idx_task_project_status', 'project_id', 'status'),
+        db.Index('idx_task_completed_at', 'completed_at'),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -139,12 +149,12 @@ class Task(db.Model):
     # Relationships
     project = relationship("Project", back_populates="tasks")
 
-    created_at = mapped_column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    created_at = mapped_column(DateTime, nullable=False, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     updated_at = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.datetime.utcnow,
-        onupdate=datetime.datetime.utcnow,
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
+        onupdate=lambda: datetime.datetime.now(datetime.timezone.utc),
     )
     completed_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, nullable=True)
 

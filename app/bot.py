@@ -412,16 +412,6 @@ class CheckBot:
                         parse_mode='Markdown'
                     )
 
-    def send_daily_reminders(self):
-        """
-        Deprecated: Send daily reminders to all users with enabled notifications.
-        This method is kept for backward compatibility but reminders are now sent
-        by _reminder_scheduler based on individual user settings.
-        """
-        logger.warning(
-            "send_daily_reminders() called - this method is deprecated, use _reminder_scheduler instead")
-        pass
-
     def _reminder_scheduler(self):
         """Background thread that checks and sends reminders based on user settings."""
         logger.info("Reminder scheduler started")

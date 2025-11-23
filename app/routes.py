@@ -18,23 +18,47 @@ from app.forms import ProjectForm, EditProjectForm, TaskForm
 from app.auth import verify_telegram_web_app_data, get_or_create_user
 from app import db
 from functools import wraps
+import logging
 
 bp = Blueprint("main", __name__)
+logger = logging.getLogger(__name__)
+
+
+# Cache for mock user to avoid repeated database queries in development
+_mock_user_cache = None
+
+
+def get_first_form_error(form) -> str:
+    """
+    Extract the first validation error from a form.
+    
+    :param form: WTForms form instance
+    :return: First error message or generic message if no errors
+    """
+    errors = form.errors
+    if errors:
+        for field_errors in errors.values():
+            if field_errors and isinstance(field_errors, list):
+                return str(field_errors[0])
+    return "Validation error"
 
 
 def get_current_user() -> User | None:
     """Get current user from session."""
+    global _mock_user_cache
+    
     telegram_id: Any | None = session.get("telegram_id")
     if not telegram_id:
         # In mock mode, auto-authenticate with mock user for development
         if current_app.config.get("TELEGRAM_MOCK", False):
-            # Use mock telegram_id
-            mock_telegram_id = 123456789
-            mock_user = get_or_create_user(mock_telegram_id)
-            session["telegram_id"] = mock_telegram_id
-            session.permanent = True
-            print(f"[DEV] Auto-authenticated mock user: {mock_telegram_id}")
-            return mock_user
+            # Use cached mock user to avoid repeated database queries
+            if _mock_user_cache is None:
+                mock_telegram_id = 123456789
+                _mock_user_cache = get_or_create_user(mock_telegram_id)
+                session["telegram_id"] = mock_telegram_id
+                session.permanent = True
+                logger.info(f"[DEV] Auto-authenticated mock user: {mock_telegram_id}")
+            return _mock_user_cache
         return None
     return User.query.filter_by(telegram_id=telegram_id).first()
 
@@ -42,36 +66,40 @@ def get_current_user() -> User | None:
 @bp.route("/api/init", methods=["POST"])
 def init_webapp():
     """Initialize Telegram Mini App and authenticate user."""
-    data = request.get_json()
-    init_data = data.get("initData")
+    try:
+        data = request.get_json()
+        init_data = data.get("initData")
 
-    if not init_data:
-        return jsonify({"error": "No initData provided"}), 400
+        if not init_data:
+            return jsonify({"error": "No initData provided"}), 400
 
-    bot_token = current_app.config.get("TELEGRAM_BOT_TOKEN")
-    if not bot_token:
-        return jsonify({"error": "Bot token not configured"}), 500
+        bot_token = current_app.config.get("TELEGRAM_BOT_TOKEN")
+        if not bot_token:
+            return jsonify({"error": "Bot token not configured"}), 500
 
-    # Verify and parse user data
-    user_data = verify_telegram_web_app_data(init_data, bot_token)
+        # Verify and parse user data
+        user_data = verify_telegram_web_app_data(init_data, bot_token)
 
-    if not user_data:
-        return jsonify({"error": "Invalid initData"}), 403
+        if not user_data:
+            return jsonify({"error": "Invalid initData"}), 403
 
-    telegram_id = user_data.get("id")
-    if not telegram_id:
-        return jsonify({"error": "No user ID in data"}), 400
+        telegram_id = user_data.get("id")
+        if not telegram_id:
+            return jsonify({"error": "No user ID in data"}), 400
 
-    # Get or create user
-    user = get_or_create_user(telegram_id)
+        # Get or create user
+        user = get_or_create_user(telegram_id)
 
-    # Store in session
-    session["telegram_id"] = telegram_id
-    session.permanent = True
+        # Store in session
+        session["telegram_id"] = telegram_id
+        session.permanent = True
 
-    return jsonify(
-        {"success": True, "user": {"id": user.id, "telegram_id": user.telegram_id}}
-    )
+        return jsonify(
+            {"success": True, "user": {"id": user.id, "telegram_id": user.telegram_id}}
+        )
+    except Exception as e:
+        logger.error(f"Failed to initialize webapp: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @bp.route("/")
@@ -83,14 +111,35 @@ def index():
     else:
         projects = get_user_projects(user.id)
     
-    # Calculate staleness for each project
-    projects_with_staleness = []
-    for project in projects:
-        staleness = project.get_staleness_ratio()
-        projects_with_staleness.append({
-            'project': project,
-            'staleness_ratio': staleness
-        })
+    # Calculate staleness for each project with pre-calculated last activity dates
+    # to avoid N+1 query problem
+    if projects:
+        # Batch query: get max completed_at for all projects at once
+        project_ids = [p.id for p in projects]
+        last_activities = db.session.query(
+            Task.project_id,
+            db.func.max(Task.completed_at).label('last_completed')
+        ).filter(
+            Task.project_id.in_(project_ids),
+            Task.completed_at.isnot(None)
+        ).group_by(Task.project_id).all()
+        
+        # Create lookup dict
+        last_activity_map = {proj_id: last_comp for proj_id, last_comp in last_activities}
+        
+        projects_with_staleness = []
+        for project in projects:
+            # Get last activity from pre-fetched data
+            last_completed = last_activity_map.get(project.id)
+            last_activity = last_completed if (last_completed and last_completed > project.updated_at) else project.updated_at
+            
+            staleness = project.get_staleness_ratio(last_activity)
+            projects_with_staleness.append({
+                'project': project,
+                'staleness_ratio': staleness
+            })
+    else:
+        projects_with_staleness = []
 
     return render_template("index.html", projects=projects_with_staleness)
 
@@ -109,20 +158,19 @@ def project_detail(project_id: int):
     if project.creator_id != user.id:
         return "Access denied", 403
 
-    # Sort tasks: completed tasks first (by completed_at asc - oldest first), then incomplete tasks (by order)
-    completed_tasks = [t for t in project.tasks if t.status == TaskStatus.DONE]
-    incomplete_tasks = [
-        t for t in project.tasks if t.status != TaskStatus.DONE]
-
-    # Sort completed tasks by completion time (oldest first)
-    completed_tasks.sort(
-        key=lambda t: t.completed_at if t.completed_at else t.created_at, reverse=False)
-
-    # Sort incomplete tasks by order field
-    incomplete_tasks.sort(key=lambda t: t.order)
-
-    # Combine: completed first, then incomplete
-    sorted_tasks = completed_tasks + incomplete_tasks
+    # Sort tasks efficiently in SQL: completed tasks first (by completed_at asc - oldest first),
+    # then incomplete tasks (by order)
+    from sqlalchemy import case
+    
+    sorted_tasks = Task.query.filter_by(project_id=project_id).order_by(
+        # First: sort by completion status (DONE=0, others=1, so DONE comes first)
+        case((Task.status == TaskStatus.DONE, 0), else_=1),
+        # Second: for completed tasks, sort by completed_at (oldest first)
+        # Use a large value for NULL to push them to the end within their group
+        case((Task.completed_at.isnot(None), Task.completed_at), else_=datetime.datetime.max.replace(tzinfo=datetime.timezone.utc)),
+        # Third: for incomplete tasks, sort by order
+        Task.order
+    ).all()
 
     return render_template("project_page.html", project=project, sorted_tasks=sorted_tasks)
 
@@ -226,15 +274,7 @@ def create_task(project_id: int):
     form = TaskForm(data=request.get_json(), meta={'csrf': False})
 
     if not form.validate():
-        # Return first validation error
-        errors = form.errors
-        first_error = "Validation error"
-        if errors:
-            for field_errors in errors.values():
-                if field_errors and isinstance(field_errors, list):
-                    first_error = str(field_errors[0])
-                    break
-        return jsonify({"error": first_error}), 400
+        return jsonify({"error": get_first_form_error(form)}), 400
 
     # Create new task with validated data
     title = form.title.data
@@ -294,14 +334,7 @@ def update_task_endpoint(project_id: int, task_id: int):
     form = TaskForm(data=request.get_json(), meta={'csrf': False})
 
     if not form.validate():
-        errors = form.errors
-        first_error = "Validation error"
-        if errors:
-            for field_errors in errors.values():
-                if field_errors and isinstance(field_errors, list):
-                    first_error = str(field_errors[0])
-                    break
-        return jsonify({"error": first_error}), 400
+        return jsonify({"error": get_first_form_error(form)}), 400
 
     title = form.title.data
     if not title:
@@ -345,38 +378,43 @@ def toggle_task_status(project_id: int, task_id: int):
     if task.project_id != project_id:
         return jsonify({"error": "Task does not belong to this project"}), 403
 
-    # Toggle status: TODO <-> DONE (skip IN_PROGRESS for simple toggle)
-    if task.status == TaskStatus.DONE:
-        task.status = TaskStatus.TODO
-        task.completed_at = None  # Clear completion time when unmarking as done
-    else:
-        task.status = TaskStatus.DONE
-        task.completed_at = datetime.datetime.now(
-            datetime.timezone.utc)  # Set completion time in UTC
-
-    db.session.commit()
-
-    # Format completed_at with explicit UTC timezone for JavaScript
-    completed_at_iso: str | None = None
-    if task.completed_at is not None:
-        # Ensure timezone-aware datetime and format with Z suffix
-        dt = task.completed_at
-        if dt.tzinfo is None:  # type: ignore[union-attr]
-            # If stored datetime is naive, treat it as UTC
-            completed_at_iso = dt.replace(  # type: ignore[union-attr]
-                tzinfo=datetime.timezone.utc).isoformat()
+    try:
+        # Toggle status: TODO <-> DONE (skip IN_PROGRESS for simple toggle)
+        if task.status == TaskStatus.DONE:
+            task.status = TaskStatus.TODO
+            task.completed_at = None  # Clear completion time when unmarking as done
         else:
-            completed_at_iso = dt.isoformat()  # type: ignore[union-attr]
+            task.status = TaskStatus.DONE
+            task.completed_at = datetime.datetime.now(
+                datetime.timezone.utc)  # Set completion time in UTC
 
-    return jsonify({
-        "success": True,
-        "task": {
-            "id": task.id,
-            "title": task.title,
-            "status": task.status.value,
-            "completed_at": completed_at_iso
-        }
-    })
+        db.session.commit()
+
+        # Format completed_at with explicit UTC timezone for JavaScript
+        completed_at_iso: str | None = None
+        if task.completed_at is not None:
+            # Ensure timezone-aware datetime and format with Z suffix
+            dt = task.completed_at
+            if dt.tzinfo is None:  # type: ignore[union-attr]
+                # If stored datetime is naive, treat it as UTC
+                completed_at_iso = dt.replace(  # type: ignore[union-attr]
+                    tzinfo=datetime.timezone.utc).isoformat()
+            else:
+                completed_at_iso = dt.isoformat()  # type: ignore[union-attr]
+
+        return jsonify({
+            "success": True,
+            "task": {
+                "id": task.id,
+                "title": task.title,
+                "status": task.status.value,
+                "completed_at": completed_at_iso
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to toggle task status for task {task_id}: {e}")
+        return jsonify({"error": "Failed to update task status"}), 500
 
 
 @bp.route("/api/project/<int:project_id>/task/<int:task_id>", methods=["DELETE"])
@@ -442,4 +480,5 @@ def reorder_tasks(project_id: int):
         return jsonify({"success": True})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Failed to reorder tasks for project {project_id}: {e}")
+        return jsonify({"error": "Failed to reorder tasks"}), 500

@@ -2,8 +2,11 @@ from app import db
 from app.models import Project, Task, ProjectPeriodicity, UserSettings
 import datetime
 from typing import Optional
+import logging
 
 from flask_sqlalchemy.query import Query
+
+logger = logging.getLogger(__name__)
 
 
 def get_user_projects(user_id: int) -> list[Project]:
@@ -39,25 +42,30 @@ def create_project(
     if name is None or short_name is None or creator_id is None:
         raise ValueError("Name, short_name, and creator_id are required to create a project.")
 
-    project = Project()
-    project.name = name
-    project.short_name = short_name
-    project.description = description
-    project.goals = goals
-    project.creator_id = creator_id
-    
-    # Set periodicity
-    if periodicity:
-        try:
-            project.periodicity = ProjectPeriodicity[periodicity]
-        except KeyError:
+    try:
+        project = Project()
+        project.name = name
+        project.short_name = short_name
+        project.description = description
+        project.goals = goals
+        project.creator_id = creator_id
+        
+        # Set periodicity
+        if periodicity:
+            try:
+                project.periodicity = ProjectPeriodicity[periodicity]
+            except KeyError:
+                project.periodicity = ProjectPeriodicity.WEEKLY
+        else:
             project.periodicity = ProjectPeriodicity.WEEKLY
-    else:
-        project.periodicity = ProjectPeriodicity.WEEKLY
-    
-    db.session.add(project)
-    db.session.commit()
-    return project
+        
+        db.session.add(project)
+        db.session.commit()
+        return project
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to create project: {e}")
+        raise
 
 
 def update_task(task_id: int, title: str) -> Task | None:
@@ -68,13 +76,18 @@ def update_task(task_id: int, title: str) -> Task | None:
     :param title: Новое название задачи
     :return: Обновленная задача или None, если задача не найдена
     """
-    task: Task | None = Task.query.get(task_id)
-    if task is None:
-        return None
-    
-    task.title = title
-    db.session.commit()
-    return task
+    try:
+        task: Task | None = Task.query.get(task_id)
+        if task is None:
+            return None
+        
+        task.title = title
+        db.session.commit()
+        return task
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to update task {task_id}: {e}")
+        raise
 
 
 def delete_task(task_id: int) -> bool:
@@ -84,13 +97,18 @@ def delete_task(task_id: int) -> bool:
     :param task_id: ID задачи
     :return: True, если задача была удалена, False, если задача не найдена
     """
-    task: Task | None = Task.query.get(task_id)
-    if task is None:
-        return False
-    
-    db.session.delete(task)
-    db.session.commit()
-    return True
+    try:
+        task: Task | None = Task.query.get(task_id)
+        if task is None:
+            return False
+        
+        db.session.delete(task)
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to delete task {task_id}: {e}")
+        raise
 
 
 def update_project(
@@ -112,26 +130,31 @@ def update_project(
     :param periodicity: Новая периодичность возврата к проекту
     :return: Обновленный проект или None, если проект не найден
     """
-    project: Project | None = Project.query.get(project_id)
-    if project is None:
-        return None
-    
-    if name is not None:
-        project.name = name
-    if short_name is not None:
-        project.short_name = short_name
-    if description is not None:
-        project.description = description
-    if goals is not None:
-        project.goals = goals
-    if periodicity is not None:
-        try:
-            project.periodicity = ProjectPeriodicity[periodicity]
-        except KeyError:
-            pass  # Keep existing value if invalid
-    
-    db.session.commit()
-    return project
+    try:
+        project: Project | None = Project.query.get(project_id)
+        if project is None:
+            return None
+        
+        if name is not None:
+            project.name = name
+        if short_name is not None:
+            project.short_name = short_name
+        if description is not None:
+            project.description = description
+        if goals is not None:
+            project.goals = goals
+        if periodicity is not None:
+            try:
+                project.periodicity = ProjectPeriodicity[periodicity]
+            except KeyError:
+                pass  # Keep existing value if invalid
+        
+        db.session.commit()
+        return project
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to update project {project_id}: {e}")
+        raise
 
 
 def delete_project(project_id: int) -> bool:
@@ -141,13 +164,18 @@ def delete_project(project_id: int) -> bool:
     :param project_id: ID проекта
     :return: True, если проект был удален, False, если проект не найден
     """
-    project: Project | None = Project.query.get(project_id)
-    if project is None:
-        return False
-    
-    db.session.delete(project)
-    db.session.commit()
-    return True
+    try:
+        project: Project | None = Project.query.get(project_id)
+        if project is None:
+            return False
+        
+        db.session.delete(project)
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to delete project {project_id}: {e}")
+        raise
 
 
 # ===== UserSettings CRUD =====
@@ -172,18 +200,23 @@ def get_or_create_user_settings(user_id: int, default_time: str = "20:00",
     :param default_timezone: Часовой пояс по умолчанию
     :return: Настройки пользователя
     """
-    settings = get_user_settings(user_id)
-    
-    if not settings:
-        settings = UserSettings()
-        settings.user_id = user_id
-        settings.reminders_enabled = True
-        settings.reminder_time = default_time
-        settings.timezone = default_timezone
-        db.session.add(settings)
-        db.session.commit()
-    
-    return settings
+    try:
+        settings = get_user_settings(user_id)
+        
+        if not settings:
+            settings = UserSettings()
+            settings.user_id = user_id
+            settings.reminders_enabled = True
+            settings.reminder_time = default_time
+            settings.timezone = default_timezone
+            db.session.add(settings)
+            db.session.commit()
+        
+        return settings
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to get or create user settings for user {user_id}: {e}")
+        raise
 
 
 def update_user_settings(user_id: int, 
@@ -200,24 +233,32 @@ def update_user_settings(user_id: int,
     :return: Обновлённые настройки
     :raises ValueError: Если формат времени неверный
     """
-    settings = get_or_create_user_settings(user_id)
-    
-    if reminders_enabled is not None:
-        settings.reminders_enabled = reminders_enabled
-    
-    if reminder_time is not None:
-        # Validate time format
-        try:
-            datetime.datetime.strptime(reminder_time, "%H:%M")
-            settings.reminder_time = reminder_time
-        except ValueError:
-            raise ValueError("Invalid time format. Use HH:MM (24-hour format)")
-    
-    if timezone is not None:
-        settings.timezone = timezone
-    
-    db.session.commit()
-    return settings
+    try:
+        settings = get_or_create_user_settings(user_id)
+        
+        if reminders_enabled is not None:
+            settings.reminders_enabled = reminders_enabled
+        
+        if reminder_time is not None:
+            # Validate time format
+            try:
+                datetime.datetime.strptime(reminder_time, "%H:%M")
+                settings.reminder_time = reminder_time
+            except ValueError:
+                raise ValueError("Invalid time format. Use HH:MM (24-hour format)")
+        
+        if timezone is not None:
+            settings.timezone = timezone
+        
+        db.session.commit()
+        return settings
+    except ValueError:
+        # Re-raise validation errors without rollback
+        raise
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to update user settings for user {user_id}: {e}")
+        raise
 
 
 def delete_user_settings(user_id: int) -> bool:
@@ -227,10 +268,15 @@ def delete_user_settings(user_id: int) -> bool:
     :param user_id: ID пользователя
     :return: True если настройки были удалены, False если не найдены
     """
-    settings = get_user_settings(user_id)
-    if not settings:
-        return False
-    
-    db.session.delete(settings)
-    db.session.commit()
-    return True
+    try:
+        settings = get_user_settings(user_id)
+        if not settings:
+            return False
+        
+        db.session.delete(settings)
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to delete user settings for user {user_id}: {e}")
+        raise
