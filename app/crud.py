@@ -1,5 +1,7 @@
 from app import db
-from app.models import Project, Task, ProjectPeriodicity
+from app.models import Project, Task, ProjectPeriodicity, UserSettings
+import datetime
+from typing import Optional
 
 from flask_sqlalchemy.query import Query
 
@@ -144,5 +146,91 @@ def delete_project(project_id: int) -> bool:
         return False
     
     db.session.delete(project)
+    db.session.commit()
+    return True
+
+
+# ===== UserSettings CRUD =====
+
+def get_user_settings(user_id: int) -> UserSettings | None:
+    """
+    Получает настройки пользователя
+    
+    :param user_id: ID пользователя
+    :return: Настройки пользователя или None
+    """
+    return UserSettings.query.filter_by(user_id=user_id).first()
+
+
+def get_or_create_user_settings(user_id: int, default_time: str = "20:00", 
+                                default_timezone: str = "UTC") -> UserSettings:
+    """
+    Получает или создаёт настройки пользователя
+    
+    :param user_id: ID пользователя
+    :param default_time: Время напоминаний по умолчанию (HH:MM)
+    :param default_timezone: Часовой пояс по умолчанию
+    :return: Настройки пользователя
+    """
+    settings = get_user_settings(user_id)
+    
+    if not settings:
+        settings = UserSettings()
+        settings.user_id = user_id
+        settings.reminders_enabled = True
+        settings.reminder_time = default_time
+        settings.timezone = default_timezone
+        db.session.add(settings)
+        db.session.commit()
+    
+    return settings
+
+
+def update_user_settings(user_id: int, 
+                        reminders_enabled: Optional[bool] = None,
+                        reminder_time: Optional[str] = None, 
+                        timezone: Optional[str] = None) -> UserSettings:
+    """
+    Обновляет настройки пользователя
+    
+    :param user_id: ID пользователя
+    :param reminders_enabled: Включены ли напоминания
+    :param reminder_time: Время отправки напоминаний (формат HH:MM)
+    :param timezone: Часовой пояс
+    :return: Обновлённые настройки
+    :raises ValueError: Если формат времени неверный
+    """
+    settings = get_or_create_user_settings(user_id)
+    
+    if reminders_enabled is not None:
+        settings.reminders_enabled = reminders_enabled
+    
+    if reminder_time is not None:
+        # Validate time format
+        try:
+            datetime.datetime.strptime(reminder_time, "%H:%M")
+            settings.reminder_time = reminder_time
+        except ValueError:
+            raise ValueError("Invalid time format. Use HH:MM (24-hour format)")
+    
+    if timezone is not None:
+        settings.timezone = timezone
+    
+    db.session.commit()
+    return settings
+
+
+def delete_user_settings(user_id: int) -> bool:
+    """
+    Удаляет настройки пользователя
+    
+    :param user_id: ID пользователя
+    :return: True если настройки были удалены, False если не найдены
+    """
+    settings = get_user_settings(user_id)
+    if not settings:
+        return False
+    
+    db.session.delete(settings)
     db.session.commit()
     return True

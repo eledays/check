@@ -12,5 +12,20 @@ class Config:
     # Telegram Bot Token for Mini App authentication
     TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
     
+    # Mini App URL (optional, will be auto-generated from bot username if not set)
+    MINI_APP_URL = os.getenv("MINI_APP_URL", "")
+    
     # Enable Telegram Mock for local development (disable with TELEGRAM_MOCK=false)
     TELEGRAM_MOCK = os.getenv("TELEGRAM_MOCK", "false").lower() == "true"
+    
+    # Bot reminder settings
+    # Time to send daily reminders (format: "HH:MM" in 24-hour format, timezone-aware)
+    DEFAULT_BOT_REMINDER_TIME = os.getenv("BOT_REMINDER_TIME", "20:00")
+    
+    # Timezone for reminders (default: UTC)
+    BOT_TIMEZONE = os.getenv("BOT_TIMEZONE", "UTC")
+    
+    # Enable/disable bot reminders
+    BOT_REMINDERS_ENABLED = os.getenv("BOT_REMINDERS_ENABLED", "true").lower() == "true"
+
+    REMINDER_CHECK_INTERVAL = 60  # Check for reminders every 60 seconds

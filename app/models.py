@@ -30,6 +30,30 @@ class User(db.Model):
 
     # Relationships
     projects = relationship("Project", back_populates="creator", lazy=True)
+    settings = relationship("UserSettings", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+
+class UserSettings(db.Model):
+    __tablename__ = "user_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False, unique=True)
+    
+    # Reminder settings
+    reminders_enabled: Mapped[bool] = mapped_column(db.Boolean, nullable=False, default=True)
+    reminder_time: Mapped[str] = mapped_column(String(5), nullable=False, default="20:00")  # Format: "HH:MM"
+    timezone: Mapped[str] = mapped_column(String(50), nullable=False, default="UTC")
+    
+    # Relationships
+    user = relationship("User", back_populates="settings")
+    
+    created_at = mapped_column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    updated_at = mapped_column(
+        DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow,
+        onupdate=datetime.datetime.utcnow,
+    )
 
 
 class Project(db.Model):
