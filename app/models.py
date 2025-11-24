@@ -84,24 +84,24 @@ class Project(db.Model):
     )
 
     def get_last_activity_date(self) -> datetime.datetime:
-        """Get the date of last activity on this project (last task completion or update)."""
+        """Get the date of last activity on this project (last task completion)."""
         # Get the most recent task completion using SQL
         last_completed = db.session.query(db.func.max(Task.completed_at)).filter(
             Task.project_id == self.id,
             Task.completed_at.isnot(None)
         ).scalar()
-        
-        # Compare with project's updated_at
-        # Normalize tzinfo for comparison: treat naive datetimes as UTC
-        if last_completed and last_completed.tzinfo is None:
-            last_completed = last_completed.replace(tzinfo=datetime.timezone.utc)
-        updated_at_val = self.updated_at
-        if updated_at_val and updated_at_val.tzinfo is None:
-            updated_at_val = updated_at_val.replace(tzinfo=datetime.timezone.utc)
 
-        if last_completed and last_completed > updated_at_val:
-            return last_completed
-        return updated_at_val
+        print('last_completed:', last_completed)  # Debug print
+        
+        # If no tasks have been completed, return project creation date
+        if last_completed is None:
+            return self.created_at
+        
+        # Normalize tzinfo for consistency: treat naive datetimes as UTC
+        if last_completed.tzinfo is None:
+            last_completed = last_completed.replace(tzinfo=datetime.timezone.utc)
+        
+        return last_completed
     
     def get_staleness_ratio(self, last_activity: Optional[datetime.datetime] = None) -> float:
         """
@@ -118,6 +118,7 @@ class Project(db.Model):
             last_activity = last_activity.replace(tzinfo=datetime.timezone.utc)
         days_since_activity = (now - last_activity).days
         threshold = self.periodicity_days
+        print(days_since_activity, threshold)
         if threshold == 0:
             return float('inf')  # Avoid division by zero
         return days_since_activity / threshold
