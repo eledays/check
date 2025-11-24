@@ -53,7 +53,8 @@ def get_daily_summary(user_id: int) -> Dict[str, Any]:
         # Separate tasks by status (tasks already loaded via joinedload)
         completed_today_tasks = [
             t for t in project.tasks
-            if t.status == TaskStatus.DONE and t.completed_at and t.completed_at >= today_start
+            if t.status == TaskStatus.DONE and t.completed_at and \
+            ((t.completed_at if t.completed_at.tzinfo is not None else t.completed_at.replace(tzinfo=datetime.timezone.utc)) >= today_start)
         ]
         pending_tasks_count = sum(
             1 for t in project.tasks if t.status != TaskStatus.DONE)

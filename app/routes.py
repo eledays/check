@@ -131,7 +131,13 @@ def index():
         for project in projects:
             # Get last activity from pre-fetched data
             last_completed = last_activity_map.get(project.id)
-            last_activity = last_completed if (last_completed and last_completed > project.updated_at) else project.updated_at
+            # Normalize tzinfo for safe comparison without mutating project.updated_at
+            if last_completed and last_completed.tzinfo is None:
+                last_completed = last_completed.replace(tzinfo=datetime.timezone.utc)
+            updated_at_val = project.updated_at
+            if updated_at_val and updated_at_val.tzinfo is None:
+                updated_at_val = updated_at_val.replace(tzinfo=datetime.timezone.utc)
+            last_activity = last_completed if (last_completed and last_completed > updated_at_val) else updated_at_val
             
             staleness = project.get_staleness_ratio(last_activity)
             projects_with_staleness.append({

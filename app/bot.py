@@ -127,25 +127,18 @@ class CheckBot:
         def handle_help(message):
             """Handle /help command."""
             help_text = (
-                "ℹ️ *Помощь по боту Check*\n\n"
-                "*Команды:*\n"
-                "/start - Начать работу с ботом\n"
-                "/app - Открыть Mini App\n"
-                "/summary - Получить итоги дня\n"
-                "/settings - Посмотреть настройки уведомлений\n"
-                "/remind - Управление уведомлениями\n"
-                "/help - Показать эту справку\n\n"
-                "*Управление уведомлениями:*\n"
-                "• `/remind on` - Включить уведомления\n"
-                "• `/remind off` - Отключить уведомления\n"
-                "• `/remind time HH:MM` - Установить время\n"
-                "• `/remind tz TIMEZONE` - Установить часовой пояс\n\n"
-                "*О приложении:*\n"
-                "Check - это система управления проектами. "
-                "Используйте Mini App для создания проектов, добавления задач "
-                "и отслеживания прогресса.\n\n"
-                "Настройте время и часовой пояс для ежедневных напоминаний, "
-                "и бот будет сообщать вам о прогрессе в удобное время!"
+                "<b>Команды</b>\n"
+                "/start — начать работу\n"
+                "/app — открыть мини апп\n"
+                "/summary — получить итоги дня\n"
+                "/settings — посмотреть настройки уведомлений\n"
+                "/remind — управление уведомлениями\n"
+                "/help — показать эту справку\n\n"
+                "<b>Управление уведомлениями:</b>\n"
+                "- <code>/remind on</code> — включить уведомления\n"
+                "- <code>/remind off</code> — отключить уведомления\n"
+                "- <code>/remind time HH:MM</code> — установить время\n"
+                "- <code>/remind tz TIMEZONE</code> — установить часовой пояс\n\n"
             )
 
             self.bot.send_message(
@@ -166,7 +159,7 @@ class CheckBot:
             try:
                 markup = types.InlineKeyboardMarkup()
                 web_app_button = types.InlineKeyboardButton(
-                    text="📱 Открыть приложение",
+                    text="Открыть приложение",
                     web_app=types.WebAppInfo(url=self.mini_app_url)
                 )
                 markup.add(web_app_button)
@@ -206,7 +199,6 @@ class CheckBot:
                 self.bot.send_message(
                     message.chat.id,
                     summary_text,
-                    parse_mode='Markdown'
                 )
 
         @self.bot.message_handler(commands=['settings'])
@@ -232,26 +224,25 @@ class CheckBot:
                 tz_str = settings.timezone if settings.timezone else "UTC (по умолчанию)"
 
                 settings_text = (
-                    "⚙️ *Настройки уведомлений*\n\n"
-                    f"*Статус:* {status}\n"
-                    f"*Время:* {time_str}\n"
-                    f"*Часовой пояс:* {tz_str}\n\n"
-                    "*Команды для управления:*\n"
-                    "• `/remind on` - Включить уведомления\n"
-                    "• `/remind off` - Отключить уведомления\n"
-                    "• `/remind time HH:MM` - Установить время (например: `/remind time 21:30`)\n"
-                    "• `/remind tz TIMEZONE` - Установить часовой пояс (например: `/remind tz Europe/Moscow`)\n\n"
+                    "<b>Настройки уведомлений</b>\n"
+                    "Каждый день в указанное время вы будете получать уведомление с итогами дня\n\n"
+                    f"<b>Статус:</b> {status}\n"
+                    f"<b>Время:</b> {time_str}\n"
+                    f"<b>Часовой пояс:</b> {tz_str}\n\n"
+                    "<b>Команды для управления:</b>\n"
+                    "- <code>/remind on</code> — включить уведомления\n"
+                    "- <code>/remind off</code> — отключить уведомления\n"
+                    "- <code>/remind time HH:MM</code> — установить время (например: <code>/remind time 21:30</code>)\n"
+                    "- <code>/remind tz TIMEZONE</code> — установить часовой пояс (например: <code>/remind tz Europe/Moscow</code>)\n\n"
                     "Примеры часовых поясов:\n"
-                    "• `Europe/Moscow` - МСК\n"
-                    "• `Europe/Kiev` - Киев\n"
-                    "• `Asia/Almaty` - Алматы\n"
-                    "• `UTC` - UTC"
+                    "- <code>Europe/Moscow</code> - МСК\n"
+                    "- <code>Asia/Almaty</code> - Алматы\n"
+                    "- <code>UTC</code> - UTC"
                 )
 
                 self.bot.send_message(
                     message.chat.id,
-                    settings_text,
-                    parse_mode='Markdown'
+                    settings_text
                 )
 
         @self.bot.message_handler(commands=['remind'])
@@ -292,8 +283,7 @@ class CheckBot:
                     update_user_settings(user.id, reminders_enabled=True)
                     self.bot.send_message(
                         message.chat.id,
-                        "✅ Уведомления *включены*!",
-                        parse_mode='Markdown'
+                        "✅ Уведомления включены"
                     )
 
                 elif action == 'off':
@@ -301,8 +291,7 @@ class CheckBot:
                     update_user_settings(user.id, reminders_enabled=False)
                     self.bot.send_message(
                         message.chat.id,
-                        "❌ Уведомления *отключены*.",
-                        parse_mode='Markdown'
+                        "❌ Уведомления отключены"
                     )
 
                 elif action == 'time':
@@ -434,7 +423,7 @@ class CheckBot:
                                         try:
                                             markup = types.InlineKeyboardMarkup()
                                             app_button = types.InlineKeyboardButton(
-                                                text="📱 Открыть приложение",
+                                                text="Открыть приложение",
                                                 web_app=types.WebAppInfo(url=self.mini_app_url)
                                             )
                                             markup.add(app_button)

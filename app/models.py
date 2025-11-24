@@ -92,9 +92,16 @@ class Project(db.Model):
         ).scalar()
         
         # Compare with project's updated_at
-        if last_completed and last_completed > self.updated_at:
+        # Normalize tzinfo for comparison: treat naive datetimes as UTC
+        if last_completed and last_completed.tzinfo is None:
+            last_completed = last_completed.replace(tzinfo=datetime.timezone.utc)
+        updated_at_val = self.updated_at
+        if updated_at_val and updated_at_val.tzinfo is None:
+            updated_at_val = updated_at_val.replace(tzinfo=datetime.timezone.utc)
+
+        if last_completed and last_completed > updated_at_val:
             return last_completed
-        return self.updated_at
+        return updated_at_val
     
     def get_staleness_ratio(self, last_activity: Optional[datetime.datetime] = None) -> float:
         """
