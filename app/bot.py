@@ -46,7 +46,7 @@ class CheckBot:
             timezone: Timezone for reminders
             reminders_enabled: Whether to enable daily reminders
         """
-        self.bot = telebot.TeleBot(token)
+        self.bot = telebot.TeleBot(token, parse_mode='html')
         self.app = app
         self.db = db
         self.reminder_time = reminder_time
@@ -87,18 +87,8 @@ class CheckBot:
                     self.db.session.commit()
 
             welcome_text = (
-                "👋 *Добро пожаловать в Check!*\n\n"
-                "Это бот для управления вашими проектами и задачами.\n\n"
-                "*Основные возможности:*\n"
-                "• 📱 Mini App для управления проектами\n"
-                "• 📊 Ежедневные отчёты о прогрессе\n"
-                "• ⏰ Напоминания о проектах\n"
-                "• 📈 Отслеживание задач\n\n"
-                "*Команды:*\n"
-                "/app - Открыть приложение\n"
-                "/summary - Получить итоги дня\n"
-                "/settings - Настройки уведомлений\n"
-                "/help - Помощь\n"
+                "<b>Привет, это check </b>— сервис для управления проектами и задачами. "
+                "Давай начнем, открывай мини апп"
             )
 
             # Create keyboard with web app button if URL is available
@@ -106,17 +96,15 @@ class CheckBot:
                 try:
                     markup = types.InlineKeyboardMarkup()
                     web_app_button = types.InlineKeyboardButton(
-                        text="📱 Открыть приложение",
+                        text="Открыть",
                         web_app=types.WebAppInfo(url=self.mini_app_url)
                     )
-                    markup.add(web_app_button)
-                    welcome_text += "\n\nНажмите кнопку ниже, чтобы открыть приложение!"
+                    markup.add(web_app_button)  
                     
                     # Remove any existing keyboard and show inline buttons instead
                     self.bot.send_message(
                         message.chat.id,
                         welcome_text,
-                        parse_mode='Markdown',
                         reply_markup=markup
                     )
                 except Exception as e:
@@ -125,7 +113,6 @@ class CheckBot:
                     self.bot.send_message(
                         message.chat.id,
                         welcome_text,
-                        parse_mode='Markdown',
                         reply_markup=types.ReplyKeyboardRemove()
                     )
             else:
@@ -133,7 +120,6 @@ class CheckBot:
                 self.bot.send_message(
                     message.chat.id,
                     welcome_text,
-                    parse_mode='Markdown',
                     reply_markup=types.ReplyKeyboardRemove()
                 )
 
@@ -165,7 +151,6 @@ class CheckBot:
             self.bot.send_message(
                 message.chat.id,
                 help_text,
-                parse_mode='Markdown'
             )
 
         @self.bot.message_handler(commands=['app'])

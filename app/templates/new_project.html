@@ -36,13 +36,14 @@
                 {{ form.goals(cols=60, rows=4, placeholder="Цели, желаемые результаты") }}
             </div>
 
-            <div id="periodicity">
+            <div id="periodicity-block">
                 <p>Периодичность возврата</p>
                 {{ form.periodicity() }}
             </div>
 
-            <div id="submit">
-                {{ form.submit() }}
+            <div id="actions">
+                {{ form.submit(id="submit-button", class="action-button") }}
+                <a href="{{ url_for('main.index') }}" class="cancel-button action-button">Отмена</a>
             </div>
         </form>
     </div>

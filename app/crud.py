@@ -50,14 +50,14 @@ def create_project(
         project.goals = goals
         project.creator_id = creator_id
         
-        # Set periodicity
+        # Set periodicity_days
         if periodicity:
             try:
-                project.periodicity = ProjectPeriodicity[periodicity]
-            except KeyError:
-                project.periodicity = ProjectPeriodicity.WEEKLY
+                project.periodicity_days = int(periodicity)
+            except Exception:
+                project.periodicity_days = 7
         else:
-            project.periodicity = ProjectPeriodicity.WEEKLY
+            project.periodicity_days = 7
         
         db.session.add(project)
         db.session.commit()
@@ -145,8 +145,8 @@ def update_project(
             project.goals = goals
         if periodicity is not None:
             try:
-                project.periodicity = ProjectPeriodicity[periodicity]
-            except KeyError:
+                project.periodicity_days = int(periodicity)
+            except Exception:
                 pass  # Keep existing value if invalid
         
         db.session.commit()

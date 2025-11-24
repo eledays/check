@@ -269,7 +269,6 @@ body {
     font-size: 1rem;
     font-weight: 500;
     transition: background-color 0.2s ease;
-    margin-left: 8px;
 }
 
 .new-project-form #submit-button:hover {
@@ -481,30 +480,33 @@ body {
 }
 
 /* Project actions */
+#actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+}
+
+#actions > *:first-child {
+    flex: 1 1 100%;
+    width: 100%;
+}
+
+#actions > *:not(:first-child) {
+    flex: 1 1 120px;
+    min-width: 120px;
+}
+
+.action-button {
+    width: 100%;
+    text-align: center;
+    display: block;
+}
+
 .project-actions {
     margin-top: 12px;
     display: flex;
     justify-content: flex-end;
-}
-
-/* Flash messages */
-.flash-message {
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-}
-
-.flash-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.flash-error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
 }
 
 /* Form validation errors */
@@ -522,7 +524,7 @@ body {
 
 /* Cancel button */
 .cancel-button {
-    display: inline-block;
+    /* display: inline-block; */
     padding: 12px 20px;
     background-color: transparent;
     color: var(--secondary-color);
@@ -532,7 +534,6 @@ body {
     font-size: 1rem;
     font-weight: 500;
     transition: background-color 0.2s ease;
-    margin-left: 8px;
 }
 
 .cancel-button:hover {
@@ -541,7 +542,7 @@ body {
 
 /* Delete button */
 #delete-project-button {
-    display: inline-block;
+    /* display: inline-block; */
     padding: 12px 20px;
     background-color: transparent;
     color: #9e2733;
@@ -551,7 +552,6 @@ body {
     font-size: 1rem;
     font-weight: 500;
     transition: background-color 0.2s ease, color 0.2s ease;
-    margin-left: 8px;
 }
 
 /* Timeline styles */
@@ -683,4 +683,51 @@ body {
     font-size: 0.95rem;
     line-height: 1.5;
     margin-bottom: 20px;
+}
+
+#periodicity-block {
+    width: 100%;
+    background-color: transparent;  
+    border-radius: 8px;
+    outline: none;
+    color: var(--primary-color);
+    font-size: 1rem;
+    margin-bottom: 20px;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+#periodicity-block select {
+    width: 100%;
+    padding: 12px 40px 12px 12px; /* Добавляем место для стрелки справа */
+    margin-top: 6px;
+    background-color: transparent;
+    color: var(--primary-color);
+    border: 1px solid var(--secondary-color);
+    outline: none;
+    cursor: pointer;
+    
+    /* Убираем стандартную стрелку */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    
+    /* Добавляем свою стрелку как фон */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    
+    transition: border-color 0.2s ease;
+}
+
+#periodicity-block select:focus {
+    border-color: var(--primary-color);
+}
+
+/* Стилизация опций (работает не во всех браузерах) */
+#periodicity-block select option {
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    padding: 12px;
 }

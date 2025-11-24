@@ -15,11 +15,13 @@ class TaskStatus(Enum):
 
 
 class ProjectPeriodicity(Enum):
-    DAILY = "daily"
-    WEEKLY = "weekly"
-    BIWEEKLY = "biweekly"
-    MONTHLY = "monthly"
-    QUARTERLY = "quarterly"
+    """Периодичность проекта в днях"""
+    DAILY = 1
+    TWO_DAYS = 2
+    THREE_DAYS = 3
+    WEEKLY = 7
+    BIWEEKLY = 14
+    MONTHLY = 30
 
 
 class User(db.Model):
@@ -64,11 +66,7 @@ class Project(db.Model):
     short_name: Mapped[str] = mapped_column(String(16), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
     goals: Mapped[Optional[str]] = mapped_column(String(4096), nullable=True)
-    periodicity: Mapped[ProjectPeriodicity] = mapped_column(
-        SAEnum(ProjectPeriodicity), 
-        nullable=False, 
-        default=ProjectPeriodicity.WEEKLY
-    )
+    periodicity_days: Mapped[int] = mapped_column(Integer, nullable=False, default=7)
 
     creator_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
 
@@ -100,7 +98,7 @@ class Project(db.Model):
     
     def get_staleness_ratio(self, last_activity: Optional[datetime.datetime] = None) -> float:
         """
-        Calculate how stale this project is based on periodicity.
+        Calculate how stale this project is based on periodicity_days.
         Returns a ratio: 0 = completely fresh, 1.0 = at the periodicity threshold, >1.0 = overdue
         
         Args:
@@ -108,27 +106,13 @@ class Project(db.Model):
         """
         if last_activity is None:
             last_activity = self.get_last_activity_date()
-            
         now = datetime.datetime.now(datetime.timezone.utc)
-        
-        # Make last_activity timezone-aware if it isn't
         if last_activity.tzinfo is None:
             last_activity = last_activity.replace(tzinfo=datetime.timezone.utc)
-        
         days_since_activity = (now - last_activity).days
-        
-        # Define threshold days for each periodicity
-        periodicity_days = {
-            ProjectPeriodicity.DAILY: 1,
-            ProjectPeriodicity.WEEKLY: 7,
-            ProjectPeriodicity.BIWEEKLY: 14,
-            ProjectPeriodicity.MONTHLY: 30,
-            ProjectPeriodicity.QUARTERLY: 90,
-        }
-        
-        threshold = periodicity_days.get(self.periodicity, 7)
-        
-        # Return ratio (0 = fresh, 1.0 = at threshold, >1.0 = overdue)
+        threshold = self.periodicity_days
+        if threshold == 0:
+            return float('inf')  # Avoid division by zero
         return days_since_activity / threshold
 
 

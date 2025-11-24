@@ -113,13 +113,13 @@ def populate_test_data():
                 ]
             },
             {
-                "name": "Квартальный проект",
-                "short_name": "quarterly",
-                "description": "Обновляется раз в квартал, прошло 45 дней",
-                "periodicity": ProjectPeriodicity.QUARTERLY,
-                "days_ago": 45,  # staleness = 0.5 for quarterly
+                "name": "Проект каждые 2 дня",
+                "short_name": "two_days",
+                "description": "Обновляется каждые 2 дня",
+                "periodicity": ProjectPeriodicity.TWO_DAYS,
+                "days_ago": 1,  # staleness = 0.5
                 "tasks": [
-                    {"title": "Задача полтора месяца назад", "completed_days_ago": 45}
+                    {"title": "Задача день назад", "completed_days_ago": 1}
                 ]
             },
             {

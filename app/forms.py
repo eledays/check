@@ -11,13 +11,14 @@ class ProjectForm(FlaskForm):
     periodicity = SelectField(
         "Периодичность возврата",
         choices=[
-            ('DAILY', 'Каждый день'),
-            ('WEEKLY', 'Каждую неделю'),
-            ('BIWEEKLY', 'Каждые 2 недели'),
-            ('MONTHLY', 'Каждый месяц'),
-            ('QUARTERLY', 'Каждые 3 месяца'),
+            ("1", "Каждый день"),
+            ("2", "Каждые 2 дня"),
+            ("3", "Каждые 3 дня"),
+            ("7", "Каждую неделю"),
+            ("14", "Каждые 2 недели"),
+            ("30", "Каждый месяц"),
         ],
-        default='WEEKLY',
+        default="7",
         validators=[DataRequired()]
     )
     submit = SubmitField("Создать")
@@ -31,11 +32,12 @@ class EditProjectForm(FlaskForm):
     periodicity = SelectField(
         "Периодичность возврата",
         choices=[
-            ('DAILY', 'Каждый день'),
-            ('WEEKLY', 'Каждую неделю'),
-            ('BIWEEKLY', 'Каждые 2 недели'),
-            ('MONTHLY', 'Каждый месяц'),
-            ('QUARTERLY', 'Каждые 3 месяца'),
+            ("1", "Каждый день"),
+            ("2", "Каждые 2 дня"),
+            ("3", "Каждые 3 дня"),
+            ("7", "Каждую неделю"),
+            ("14", "Каждые 2 недели"),
+            ("30", "Каждый месяц"),
         ],
         validators=[DataRequired()]
     )

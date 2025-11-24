@@ -76,7 +76,7 @@
                 {% endif %}
             </div>
 
-            <div id="periodicity">
+            <div id="periodicity-block">
                 <p>Периодичность возврата</p>
                 {{ form.periodicity() }}
                 {% if form.periodicity.errors %}
@@ -89,9 +89,9 @@
             </div>
 
             <div id="actions">
-                {{ form.submit(id="submit-button") }}
-                <a href="{{ url_for('main.project_detail', project_id=project.id) }}" class="cancel-button">Отмена</a>
-                <button type="button" id="delete-project-button">Удалить</button>
+                {{ form.submit(id="submit-button", class="action-button") }}
+                <a href="{{ url_for('main.project_detail', project_id=project.id) }}" class="cancel-button action-button">Отмена</a>
+                <button type="button" id="delete-project-button" class="action-button">Удалить</button>
             </div>
         </form>
 
