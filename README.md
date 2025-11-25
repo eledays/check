@@ -273,3 +273,52 @@ ngrok http 5000
 > **⚠️ Production**: В production обязательно установите `TELEGRAM_MOCK=false` для безопасности!
 
 ---
+
+## Развёртывание в продакшене
+
+Для развёртывания приложения в продакшене выполните следующие шаги:
+
+1. **Настройте переменные окружения**
+   Убедитесь, что файл `.env` содержит корректные значения для всех переменных:
+   ```bash
+   SECRET_KEY=your_production_secret_key
+   DATABASE_URL=your_production_database_url
+   TELEGRAM_BOT_TOKEN=your_bot_token_here
+   BOT_REMINDER_TIME=20:00
+   BOT_TIMEZONE=Europe/Moscow
+   BOT_REMINDERS_ENABLED=true
+   ```
+
+2. **Соберите статические файлы**
+   Если ваше приложение использует статические файлы, убедитесь, что они собраны и готовы к использованию.
+
+3. **Примените миграции базы данных**
+   Выполните команду для обновления схемы базы данных:
+   ```bash
+   flask --app run.py db upgrade
+   ```
+
+4. **Настройте сервер WSGI**
+   Используйте Gunicorn для запуска приложения:
+   ```bash
+   gunicorn -w 4 -b 0.0.0.0:8000 run:app
+   ```
+   Здесь:
+   - `-w 4` — количество воркеров (можно настроить в зависимости от ресурсов сервера).
+   - `-b 0.0.0.0:8000` — адрес и порт для прослушивания.
+
+5. **Настройте обратный прокси**
+   Используйте Nginx или Apache для проксирования запросов к вашему приложению. Пример конфигурации для Nginx:
+   ```nginx
+   server {
+       listen 80;
+       server_name your_domain.com;
+
+       location / {
+           proxy_pass http://127.0.0.1:8000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       }
+   }
+   ```
