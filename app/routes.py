@@ -268,7 +268,7 @@ def create_task(project_id: int):
         return jsonify({"error": "Access denied"}), 403
 
     # Use TaskForm for validation and CSRF protection
-    form = TaskForm(data=request.get_json(), meta={'csrf': False})
+    form = TaskForm(data=request.get_json())
 
     if not form.validate():
         return jsonify({"error": get_first_form_error(form)}), 400
@@ -328,7 +328,7 @@ def update_task_endpoint(project_id: int, task_id: int):
         return jsonify({"error": "Task does not belong to this project"}), 403
 
     # Use TaskForm for validation
-    form = TaskForm(data=request.get_json(), meta={'csrf': False})
+    form = TaskForm(data=request.get_json())
 
     if not form.validate():
         return jsonify({"error": get_first_form_error(form)}), 400
