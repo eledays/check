@@ -1,4 +1,4 @@
-# glint — трекер привычек
+# check — трекер привычек
 
 ## Описание
 
@@ -9,7 +9,7 @@
 1. Склонируйте репозиторий
 
     ```
-    git clone https://github.com/yourusername/glint.git
+    git clone https://github.com/eledays/check.git
     ```
 
 2. Установите зависимости
