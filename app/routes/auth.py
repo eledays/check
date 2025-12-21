@@ -39,7 +39,7 @@ def oauth_callback():
     state: str | None = request.args.get('state')
     if state != session.get('state'):
         flash('Ошибка авторизации')
-        logger.error('Auth state mismatch: %s', state)
+        logger.error('Auth state mismatch: %s %s', state, session.get('state'))
         return redirect(url_for('main.index'))
     
     # Удаление state из сессии
