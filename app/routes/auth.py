@@ -1,4 +1,5 @@
-from app import app
+from app import app, db
+from app.crud.users import get_user_by_yandex_id
 
 from flask import Blueprint, redirect, request, session, flash, url_for
 
@@ -6,6 +7,8 @@ from urllib.parse import urlencode
 import requests
 import secrets
 from logging import Logger, getLogger
+
+from app.models import User
 
 bp = Blueprint("auth", __name__)
 logger: Logger = getLogger(__name__)
@@ -83,16 +86,41 @@ def oauth_callback():
     user_data = user_response.json()
 
     try:
-        yandex_id: str = user_data['id']
+        yandex_id: int = int(user_data['id'])
         login: str = user_data['login']
         client_id: str = user_data['client_id']
         first_name: str = user_data['first_name']
         last_name: str = user_data['last_name']
-    except KeyError:
+    except (KeyError, TypeError):
         flash('Не удалось получить информацию о пользователе')
         return redirect(url_for('main.index'))
     
     # Поиск или создание пользователя в базе
-    print(user_data)
+    user: User | None = get_user_by_yandex_id(yandex_id)
+    if user is None:
+        user = User()
+        user.yandex_id = yandex_id
+        user.login = login
+        user.first_name = first_name
+        user.last_name = last_name
+        db.session.add(user)
+        db.session.commit()
 
+        logger.info('New user created: %s', user)
+    else:
+        user.login = login
+        user.first_name = first_name
+        user.last_name = last_name
+        db.session.commit()
+
+        logger.info('User updated: %s', user)
+
+    session["user_id"] = user.id
+
+    return redirect(url_for('main.index'))
+
+
+@bp.route('/logout')
+def logout():
+    session.clear()
     return redirect(url_for('main.index'))

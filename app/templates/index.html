@@ -6,6 +6,11 @@
     <title>check</title>
 </head>
 <body>
-    <a href="/oauth/yandex">Войти в аккаунт</a>
+    {% if user_id %}
+        <p>Вы вошли как {{ user_id }}</p>
+        <a href="/logout">Выйти</a>
+    {% else %}
+        <a href="/oauth/yandex">Войти в аккаунт</a>
+    {% endif %}
 </body>
 </html>
