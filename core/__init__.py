@@ -11,11 +11,7 @@ from sqlalchemy.orm import sessionmaker
 
 app = Flask(__name__)
 
-# Configs
-token = os.getenv("BOT_TOKEN", "")
-
 app.config.from_object(Config)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-bot = telebot.TeleBot(token, parse_mode="HTML")

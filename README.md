@@ -21,7 +21,6 @@
 3. Создайте файл .env и заполните его данными
 
     ```
-    BOT_TOKEN=your_bot_token
     DATABASE_URL=your_database_url
     ```
 
