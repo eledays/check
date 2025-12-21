@@ -16,3 +16,4 @@ class Config:
     YANDEX_CLIENT_ID = os.environ.get('YANDEX_CLIENT_ID')
     YANDEX_CLIENT_SECRET = os.environ.get('YANDEX_CLIENT_SECRET')
     YANDEX_REDIRECT_URI = 'http://localhost:5000/oauth/yandex/callback'
+    YANDEX_ORIGIN_URI = 'http://localhost:5000'

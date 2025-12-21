@@ -14,6 +14,11 @@ bp = Blueprint("auth", __name__)
 logger: Logger = getLogger(__name__)
 
 
+@bp.route('/login')
+def login():
+    return redirect(url_for('auth.oauth_yandex'))
+
+
 @bp.route("/oauth/yandex")
 def oauth_yandex():
     # Генерация случайного state для защиты от CSRF атак
