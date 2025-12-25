@@ -13,8 +13,12 @@
         <h1>Управление привычками</h1>
         <div class="button full-width" id="create-block">
             <p class="block-text">+ Создать</p>
-            <div class="open-block">
-                <input type="text" placeholder="Название привычки">
+            <div class="open-block" style="display: none;">
+                <form action="POST" action="{{ url_for('create_habit') }}">
+                    {{ form.hidden_tag() }}
+
+                    {{ form.name() }}
+                </form>
             </div>
         </div>
     </div>

@@ -1,5 +1,6 @@
 from app import app
 from flask import Blueprint, render_template, session, redirect, url_for
+from app.forms import HabitCreatingForm
 
 bp = Blueprint("main", __name__)
 
@@ -17,9 +18,10 @@ def index():
 @app.route("/manage")
 def manage():
     user_id: int | None = session.get("user_id")
-    print(session)
 
     if user_id is None:
         return redirect(url_for("main.index"))
     
-    return render_template("manage.html")
+    form = HabitCreatingForm()
+    
+    return render_template("manage.html", form=form)

@@ -18,6 +18,8 @@ migrate.init_app(app, db)
 
 from app.routes.main import bp as main_bp
 from app.routes.auth import bp as auth_bp
+from app.routes.habits import bp as habits_bp
 
 app.register_blueprint(main_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(habits_bp)
