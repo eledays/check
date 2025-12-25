@@ -5,3 +5,4 @@ from wtforms.validators import DataRequired, Length, EqualTo
 
 class HabitCreatingForm(FlaskForm):
     name = StringField('Название', validators=[DataRequired()])
+    submit = SubmitField('Создать')
