@@ -1,55 +1,6 @@
-#create-block {
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: .5s ease;
-    padding: 20px;
-}
-
-#create-block.open {
-    height: 150px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#create-block.top-left-align {
-    display: flex;
-    justify-content: flex-start; 
-    align-items: flex-start;
-}
-
-.block-text {
-    transition: .2s ease;
-}
-
-#create-block.open .block-text {
-    opacity: 0;
-}
-
-#open-block {
-    transition: .2s ease;
-    display: block;
-    text-align: left;
-    width: 100%;
-}
-
-#open-block form {
-    width: 100%;
-}
-
-#open-block form p {
-    margin-bottom: 6px;
-
-}
-
-#open-block form input#name {
-    width: 100%;
+.habit {
     background-color: black;
     color: white;
-    border: none;
-    font-size: 1.5rem;
-    outline: none;
-    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 10px;
 }

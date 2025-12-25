@@ -11,17 +11,15 @@
 <body>
     <div class="cont">
         <h1>Управление привычками</h1>
-        <div class="button full-width" id="create-block">
-            <p class="block-text">+ Создать</p>
-            <div id="open-block" style="display: none; opacity: 0;">
-                <form action="POST" action="{{ url_for('create_habit') }}">
-                    {{ form.hidden_tag() }}
-
-                    {{ form.name(placeholder='Название', id='name') }}
-
-                    {{ form.submit() }}
+        <div class="habits">
+            {% for habit_form in habits %}
+                <form action="{{ url_for('manage') }}" method="post">
+                    {{ habit_form.hidden_tag() }}
+                    {{ habit_form.name() }}
+                    {{ habit_form.delete() }}
+                    {{ habit_form.submit() }}
                 </form>
-            </div>
+            {% endfor %}
         </div>
     </div>
 

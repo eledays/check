@@ -1,6 +1,7 @@
 from app import app
 from flask import Blueprint, render_template, session, redirect, url_for
-from app.forms import HabitCreatingForm
+from app.forms import HabitForm
+from app.crud.habits import get_habits
 
 bp = Blueprint("main", __name__)
 
@@ -22,6 +23,10 @@ def manage():
     if user_id is None:
         return redirect(url_for("main.index"))
     
-    form = HabitCreatingForm()
-    
-    return render_template("manage.html", form=form)
+    habits = get_habits(user_id)
+    result = []
+    for habit in habits:
+        form = HabitForm(id=habit.id, name=habit.name)
+        result.append(form)
+
+    return render_template("manage.html", habits=result)
