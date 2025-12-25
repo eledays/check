@@ -1,5 +1,5 @@
 from app import app
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session, redirect, url_for
 
 bp = Blueprint("main", __name__)
 
@@ -12,3 +12,14 @@ def index():
         return render_template("about.html")
 
     return render_template("index.html", user_id=user_id)
+
+
+@app.route("/manage")
+def manage():
+    user_id: int | None = session.get("user_id")
+    print(session)
+
+    if user_id is None:
+        return redirect(url_for("main.index"))
+    
+    return render_template("manage.html")

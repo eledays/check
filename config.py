@@ -8,7 +8,6 @@ load_dotenv()
 class Config:
 
     SECRET_KEY = os.getenv("SECRET_KEY", "")
-    SECRET_KEY = os.getenv("SECRET_KEY", "")
     SQLALCHEMY_DATABASE_URI = "sqlite:///app.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -17,3 +16,7 @@ class Config:
     YANDEX_CLIENT_SECRET = os.environ.get('YANDEX_CLIENT_SECRET')
     YANDEX_REDIRECT_URI = 'http://localhost:5000/oauth/yandex/callback'
     YANDEX_ORIGIN_URI = 'http://localhost:5000'
+
+
+if not Config.SECRET_KEY:
+    raise ValueError("SECRET_KEY is not set")

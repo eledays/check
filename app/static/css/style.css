@@ -7,7 +7,7 @@
     font-family: 'Inter', sans-serif;
 }
 
-a.button {
+a.button, button {
     color: white;
     text-decoration: none;
     background-color: #000;
@@ -15,4 +15,19 @@ a.button {
     border-radius: 10px;
     display: block;
     width: max-content;
+    border: none;
+    font-size: 1rem;
+}
+
+button.full-width {
+    width: 100%;
+}
+
+.cont {
+    padding: 20px;
+}
+
+h1 {
+    font-size: 1.7rem;
+    margin-bottom: 20px;
 }

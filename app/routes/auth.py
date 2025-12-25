@@ -69,6 +69,7 @@ def oauth_callback():
     
     response: requests.Response = requests.post(token_url, data=token_data)
     if response.status_code != 200:
+        logger.error('Auth token request failed: %s', response.text)
         flash('Не удалось получить токен')
         return redirect(url_for('main.index'))
     
@@ -76,6 +77,7 @@ def oauth_callback():
     access_token: str | None = token_info.get('access_token')
 
     if access_token is None:
+        logger.error('Auth token not found: %s', token_info)
         flash('Не удалось получить токен')
         return redirect(url_for('main.index'))
     
@@ -85,6 +87,7 @@ def oauth_callback():
     user_response = requests.get(user_info_url, headers=headers)
     
     if user_response.status_code != 200:
+        logger.error('User info request failed: %s', user_response.text)
         flash('Не удалось получить информацию о пользователе')
         return redirect(url_for('main.index'))
     
@@ -97,6 +100,7 @@ def oauth_callback():
         first_name: str = user_data['first_name']
         last_name: str = user_data['last_name']
     except (KeyError, TypeError):
+        logger.error('User info not found: %s', user_data)
         flash('Не удалось получить информацию о пользователе')
         return redirect(url_for('main.index'))
     
