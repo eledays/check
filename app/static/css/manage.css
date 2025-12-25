@@ -1,0 +1,22 @@
+#create-block {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .5s ease;
+}
+
+#create-block.open {
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.block-text {
+    transition: .2s ease;
+}
+
+#create-block.open .block-text {
+    opacity: 0;
+}

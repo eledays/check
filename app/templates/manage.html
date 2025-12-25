@@ -6,11 +6,19 @@
     <title>check — Управление привычками</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/manage.css') }}">
 </head>
 <body>
     <div class="cont">
         <h1>Управление привычками</h1>
-        <button class="full-width">+ Создать</button>
+        <div class="button full-width" id="create-block">
+            <p class="block-text">+ Создать</p>
+            <div class="open-block">
+                <input type="text" placeholder="Название привычки">
+            </div>
+        </div>
     </div>
+
+    <script src="{{ url_for('static', filename='js/manage.js') }}"></script>
 </body>
 </html>
