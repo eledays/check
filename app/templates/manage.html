@@ -7,17 +7,24 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/manage.css') }}">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=check,delete" />
 </head>
 <body>
     <div class="cont">
         <h1>Управление привычками</h1>
         <div class="habits">
             {% for habit_form in habits %}
-                <form action="{{ url_for('manage') }}" method="post">
+                <form action="{{ url_for('manage') }}" method="post" class="habit-form" id="habit-form-{{ habit_form.id.data }}">
                     {{ habit_form.hidden_tag() }}
-                    {{ habit_form.name() }}
-                    {{ habit_form.delete() }}
-                    {{ habit_form.submit() }}
+                    {{ habit_form.id(class='id') }}
+                    {{ habit_form.name(class='name') }}
+                    <div class="hidden-block">
+                        <div class="actions">
+                            {{ habit_form.delete() }}
+                            {{ habit_form.submit() }}
+                        </div>
+                    </div>
                 </form>
             {% endfor %}
         </div>

@@ -1,29 +1,38 @@
-const createBlock = document.getElementById('create-block'); 
-const createBlockText = createBlock.querySelector('.block-text');
-const openBlock = document.getElementById('open-block');
-const nameInput = document.querySelector('input#name');
-const cancelButton = document.querySelector('button.cancel');
+const habitForms = document.querySelectorAll('.habit-form');
 
-function createHabit() {
-    createBlock.classList.add('open');
-    setTimeout(() => {
-        createBlockText.style.display = 'none';
-        openBlock.style.display = 'block';
-        setTimeout(() => {
-            openBlock.style.opacity = '1';
-            createBlock.classList.add('top-left-align');
-            nameInput.focus();
-        }, 50);
-    }, 200);
+habitForms.forEach(form => {
+    const id = Number(form.querySelector('.id').value);
+    const name = form.querySelector('.name').value;
+
+    form.addEventListener('click', (event) => extendForm(event, id));
+});
+
+function extendForm(event, id) {
+    const habitForms = document.querySelectorAll('.habit-form');
+    const form = document.getElementById(`habit-form-${id}`);
+    const hiddenBlock = form.querySelector('.hidden-block');
+
+    habitForms.forEach(form => {
+        const formId = form.getAttribute('id');
+        if (form.classList.contains('expanded') && formId !== `habit-form-${id}`) {
+            reduceForm(formId);
+        }
+    });
+
+    form.classList.add('expanded');
+    hiddenBlock.classList.add('expanded');
 }
 
-function closeCreatingHabit() {
-    createBlock.classList.remove('open');
-    setTimeout(() => {
-        createBlockText.style.display = 'block';
-        openBlock.style.opacity = '0';
-    }, 200);
-}
+function reduceForm(id) {
+    console.log(`reduceForm: ${id}`)
+    const form = document.getElementById(id);
+    const hiddenBlock = form.querySelector('.hidden-block');
+    
+    form.classList.remove('expanded');
+    hiddenBlock.classList.remove('expanded');
+    hiddenBlock.style.marginTop = '0';
 
-cancelButton.addEventListener('click', closeCreatingHabit);
-createBlock.addEventListener('click', createHabit);
+    setTimeout(() => {
+        hiddenBlock.style.marginTop = null;
+    }, 250);
+}

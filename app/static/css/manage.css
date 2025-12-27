@@ -1,6 +1,47 @@
-.habit {
+.habit-form {
+    width: 100%;
+    margin-bottom: 5px;
     background-color: black;
     color: white;
-    padding: 15px;
+    padding: 20px;
     border-radius: 10px;
+    transition: all .5s ease;
+}
+
+.habit-form input#name {
+    background-color: transparent;    
+    color: white;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+}
+
+.hidden-block {
+    opacity: 0;
+    margin-top: -60px;
+    transition: all .5s ease, opacity .25s ease .25s;
+    pointer-events: none;
+}
+
+.hidden-block.expanded {
+    opacity: 1;
+    margin-top: 0px;
+}
+
+.hidden-block .actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 20px;
+}
+
+.hidden-block .actions input {
+    background-color: rgb(27, 27, 27);
+    color: white;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+    padding: 10px;
+    border-radius: 10px;
+    width: 100%;
 }
