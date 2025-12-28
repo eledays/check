@@ -47,6 +47,7 @@ def manage():
             habit = create_or_update_habit(habit_id, name, user_id)
         elif delete:
             delete_habit(habit_id)
+            logger.info(f'Habit {habit_id} deleted')
 
         return redirect(url_for('main.manage'))
 

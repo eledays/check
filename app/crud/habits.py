@@ -43,3 +43,4 @@ def delete_habit(habit_id: int) -> None:
     
     logger.info(f'{habit} deleted')
     db.session.delete(habit)
+    db.session.commit()
