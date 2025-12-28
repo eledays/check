@@ -26,6 +26,7 @@
 .hidden-block.expanded {
     opacity: 1;
     margin-top: 0px;
+    pointer-events: all;
 }
 
 .hidden-block .actions {

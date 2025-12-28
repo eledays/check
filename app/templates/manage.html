@@ -15,14 +15,14 @@
         <h1>Управление привычками</h1>
         <div class="habits">
             {% for habit_form in habits %}
-                <form action="{{ url_for('manage') }}" method="post" class="habit-form" id="habit-form-{{ habit_form.id.data }}">
+                <form action="{{ url_for('main.manage') }}" method="post" class="habit-form" id="habit-form-{{ habit_form.id.data }}">
                     {{ habit_form.hidden_tag() }}
                     {{ habit_form.id(class='id') }}
                     {{ habit_form.name(class='name') }}
                     <div class="hidden-block">
                         <div class="actions">
-                            {{ habit_form.delete() }}
-                            {{ habit_form.submit() }}
+                            {{ habit_form.delete(class="delete-button") }}
+                            {{ habit_form.submit(class="submit-button") }}
                         </div>
                     </div>
                 </form>

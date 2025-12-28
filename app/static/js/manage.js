@@ -2,12 +2,21 @@ const habitForms = document.querySelectorAll('.habit-form');
 
 habitForms.forEach(form => {
     const id = Number(form.querySelector('.id').value);
-    const name = form.querySelector('.name').value;
 
-    form.addEventListener('click', (event) => extendForm(event, id));
+    const deleteButton = form.querySelector('.delete-button');
+    const submitButton = form.querySelector('.submit-button');
+
+    const nameElement = form.querySelector('.name');
+
+    // deleteButton.addEventListener('click', () => deleteHabit(id));
+    // submitButton.addEventListener('click', () => submitHabit(id));
+
+    nameElement.addEventListener('click', (event) => extendForm(event, id));
 });
 
 function extendForm(event, id) {
+    console.log(`extendForm: ${id}`)
+
     const habitForms = document.querySelectorAll('.habit-form');
     const form = document.getElementById(`habit-form-${id}`);
     const hiddenBlock = form.querySelector('.hidden-block');
@@ -35,4 +44,12 @@ function reduceForm(id) {
     setTimeout(() => {
         hiddenBlock.style.marginTop = null;
     }, 250);
+}
+
+function deleteHabit(id) {
+    console.log(`deleteHabit: ${id}`)
+}
+
+function submitHabit(id) {
+    console.log(`submitHabit: ${id}`)
 }
